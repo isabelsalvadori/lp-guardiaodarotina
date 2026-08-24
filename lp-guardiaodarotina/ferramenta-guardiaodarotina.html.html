@@ -1,0 +1,3357 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardião da Rotina — Gerador de Painel</title>
+
+<!-- CSS: variáveis primeiro, depois UI do editor, depois o painel em si, impressão por último -->
+<style>
+/* ============================================================
+ * Guardião da Rotina — variables.css
+ * Tokens visuais globais. A cor de destaque real do painel vive
+ * em --accent, sobrescrita inline pelo JS (render-panel.js) a
+ * partir do state.meta.accentColor — aqui só o valor padrão.
+ * ============================================================ */
+:root {
+  /* Cor de destaque do painel (sobrescrita via style inline) */
+  --accent: #4F86C6;
+  --accent-soft: color-mix(in srgb, var(--accent) 18%, white);
+
+  /* Neutros da interface do editor (não aparecem no painel impresso) */
+  --editor-bg: #f4f5f7;
+  --editor-surface: #ffffff;
+  --editor-border: #dcdfe4;
+  --editor-text: #24272b;
+  --editor-text-muted: #6b7178;
+
+  /* Painel (o que é impresso) — A4 paisagem, dimensões fixas */
+  --panel-bg: #ffffff;
+  --panel-text: #2b2b2b;
+  --panel-border-width: 2.5px;
+  --panel-width: 297mm;
+  --panel-height: 210mm;
+  --panel-header-height: 26mm;
+  /* 297mm ÷ 4 colunas, em mm literais (não fr) — largura fixa, nunca estreita
+     com o conteúdo. Ver panel.css / panel-columns. */
+  --col-width: 74.25mm;
+
+  /* Tipografia */
+  --font-heading: 'Segoe UI', 'Comic Sans MS', system-ui, sans-serif;
+  --font-body: 'Segoe UI', system-ui, sans-serif;
+
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+</style>
+<style>
+/* ============================================================
+ * Guardião da Rotina — app.css
+ * UI do editor (tudo que NÃO é o painel impresso): reset básico,
+ * layout de duas colunas, formulários da barra lateral, modal do
+ * banco de ícones. Nada aqui aparece na impressão (ver print.css).
+ * ============================================================ */
+
+/* --- Reset mínimo ------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--editor-bg);
+  color: var(--editor-text);
+  font-family: var(--font-body);
+}
+button { font-family: inherit; }
+h1, h2, h3, p { margin: 0; }
+
+/* --- Layout geral -------------------------------------------------- */
+.app-shell {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 100vh;
+}
+
+.editor-sidebar {
+  background: var(--editor-surface);
+  border-right: 1px solid var(--editor-border);
+  padding: 18px 16px 40px;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.editor-sidebar h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.editor-sidebar .app-subtitle {
+  font-size: 12px;
+  color: var(--editor-text-muted);
+  margin-bottom: 18px;
+}
+
+.preview-area {
+  padding: 32px 24px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: repeating-linear-gradient(45deg, #eceef1, #eceef1 10px, #e6e8ec 10px, #e6e8ec 20px);
+}
+
+#painel-impressao-area {
+  transform-origin: top center;
+}
+
+/* --- Seções da barra lateral ---------------------------------------- */
+.editor-section {
+  border: 1px solid var(--editor-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: var(--editor-surface);
+}
+.editor-section > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafbfc;
+}
+.editor-section > summary::-webkit-details-marker { display: none; }
+.editor-section > summary::after {
+  content: '▾';
+  color: var(--editor-text-muted);
+  transition: transform 0.15s;
+}
+.editor-section[open] > summary::after { transform: rotate(180deg); }
+.editor-section-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--editor-text-muted);
+}
+.field input[type="text"],
+.field input[type="time"],
+.field textarea,
+.field select {
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--editor-text);
+}
+.field input[type="range"] { width: 100%; }
+.field input[type="color"] {
+  width: 44px;
+  height: 30px;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+}
+.field-row { display: flex; align-items: center; gap: 10px; }
+
+/* --- Stepper (+/-) para tamanho de fonte e espaçamento do título -------- */
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--editor-border);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--editor-text);
+}
+.stepper-btn:hover { background: #f0f1f3; border-color: var(--accent); }
+.stepper-value {
+  min-width: 44px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--editor-text-muted);
+}
+
+.field-value-hint {
+  font-size: 11px;
+  color: var(--editor-text-muted);
+}
+
+/* --- Botões --------------------------------------------------------- */
+.btn {
+  border: 1px solid var(--editor-border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--editor-text);
+  transition: background 0.1s, border-color 0.1s;
+}
+.btn:hover { background: #f0f1f3; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-block { width: 100%; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-sm { padding: 4px 9px; font-size: 12px; }
+
+/* --- Seleção de estilo (molduras / padrão de fundo) em grade de chips --- */
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.chip-option {
+  border: 1.5px solid var(--editor-border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+}
+.chip-option.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+/* --- Uploads ---------------------------------------------------------- */
+.upload-dropzone {
+  border: 1.5px dashed var(--editor-border);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--editor-text-muted);
+  cursor: pointer;
+}
+.upload-dropzone:hover { border-color: var(--accent); color: var(--editor-text); }
+.upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.upload-preview img,
+.upload-preview svg {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--editor-border);
+  object-fit: cover;
+  background: #fff;
+}
+
+/* --- Modal do banco de ícones/mascotes -------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 25, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal-overlay[hidden] { display: none; }
+.modal-box {
+  background: #fff;
+  border-radius: 12px;
+  width: min(560px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--editor-border);
+}
+.modal-header h2 { font-size: 15px; }
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--editor-text-muted);
+}
+.modal-body { padding: 12px 16px; overflow-y: auto; }
+
+.category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.category-tab {
+  padding: 4px 9px;
+  font-size: 11.5px;
+  border-radius: 999px;
+  border: 1px solid var(--editor-border);
+  background: #fff;
+  cursor: pointer;
+}
+.category-tab.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
+}
+.icon-grid-item {
+  border: 1.5px solid var(--editor-border);
+  border-radius: 8px;
+  padding: 6px 2px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+.icon-grid-item:hover { border-color: var(--accent); }
+.icon-grid-item svg { width: 26px; height: 26px; color: var(--editor-text); }
+.icon-grid-item span { font-size: 9px; color: var(--editor-text-muted); line-height: 1.1; }
+
+/* --- Grade de fontes / cores (popover de estilo por atividade e título) - */
+.font-option-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.font-option-item {
+  border: 1.5px solid var(--editor-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-size: 15px;
+  color: var(--editor-text);
+}
+.font-option-item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.color-swatch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.color-swatch.is-selected {
+  border-color: var(--editor-text);
+  box-shadow: 0 0 0 2px #fff inset;
+}
+
+/* --- Toast de aviso simples -------------------------------------------- */
+.toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #24272b;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.toast.is-visible { opacity: 1; }
+
+</style>
+<style>
+/* ============================================================
+ * Guardião da Rotina — panel.css
+ * Estilos do painel em si (o que vai para o papel). Usado tanto
+ * na pré-visualização em tela quanto na impressão — print.css
+ * só faz os ajustes específicos de página/A4 por cima disto.
+ *
+ * Layout: A4 PAISAGEM (297×210mm), dimensões fixas em mm — ver
+ * variables.css (--panel-width/--panel-height/--panel-header-
+ * height/--col-width). Nada aqui usa "fr" para as 4 colunas de
+ * propósito: unidades relativas deixam uma coluna "roubar"
+ * espaço de outra quando o conteúdo cresce. Com mm fixos, a
+ * largura nunca muda — quem cede é o scroll interno da coluna
+ * (tela) ou o corte no papel (impressão), nunca o layout.
+ * ============================================================ */
+
+/* --- Folha A4 paisagem ------------------------------------------------ */
+.panel {
+  position: relative;
+  width: var(--panel-width);
+  height: var(--panel-height);
+  margin: 0 auto;
+  background: var(--panel-bg);
+  color: var(--panel-text);
+  font-family: var(--font-body);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* --- Camada de fundo (padrão ou foto) ------------------------ */
+.panel-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.panel-background.bg-foto {
+  background-size: cover;
+  background-position: center;
+}
+.panel-background.bg-pontos {
+  background-image: radial-gradient(var(--accent) 1.6px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+.panel-background.bg-listras {
+  background-image: repeating-linear-gradient(
+    45deg, var(--accent) 0, var(--accent) 2px, transparent 2px, transparent 18px
+  );
+}
+.panel-background.bg-ondas {
+  background-image: radial-gradient(circle at 0 50%, transparent 12px, var(--accent) 13px, transparent 14px),
+                     radial-gradient(circle at 40px 50%, transparent 12px, var(--accent) 13px, transparent 14px);
+  background-size: 40px 24px;
+}
+
+/* --- Cabeçalho (altura fixa, o resto da folha é calculado a partir dela) */
+.panel-header {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  height: var(--panel-header-height);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3mm 10mm;
+  border-bottom: var(--panel-border-width) solid var(--accent);
+}
+.panel-mascot {
+  width: 16mm;
+  height: 16mm;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+.panel-mascot svg,
+.panel-mascot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.panel-mascot.is-empty {
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.panel-mascot.is-empty::after {
+  content: '+';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 16pt;
+  color: var(--accent);
+  opacity: 0.6;
+}
+.panel-mascot-spacer { width: 16mm; flex: 0 0 auto; }
+
+.panel-title {
+  flex: 1;
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: center;
+  letter-spacing: 0.5px;
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  padding: 2px 8px;
+  box-sizing: border-box;
+}
+
+/* Estilos visuais do título — mínimo de 3 variantes, trocáveis pela mãe */
+.panel-title.title-style-faixa {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-lg);
+}
+.panel-title.title-style-contornado {
+  color: var(--accent);
+  -webkit-text-stroke: 1.2px var(--accent);
+  text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+}
+.panel-title.title-style-sombra {
+  text-shadow: 2px 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Grade de 4 colunas, largura fixa em mm (não relativa) ------------- */
+.panel-columns {
+  position: relative;
+  z-index: 1;
+  height: calc(var(--panel-height) - var(--panel-header-height));
+  display: grid;
+  grid-template-columns: repeat(4, var(--col-width));
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+}
+.panel-column {
+  box-sizing: border-box;
+  width: var(--col-width);
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 3mm 2.5mm;
+  border-left: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  overflow: hidden; /* segurança extra: nada vaza da coluna, nem visual nem na impressão */
+}
+.panel-column:first-child { border-left: none; }
+
+.panel-column-title {
+  flex: 0 0 auto;
+  font-family: var(--font-heading);
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  text-align: center;
+  padding: 3px 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2.5mm;
+}
+
+/* Área rolável (só na tela — ver print.css) das linhas de atividade */
+.panel-items {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  overflow-y: auto;
+}
+/* Aviso visual discreto: há conteúdo além do que cabe na altura impressa */
+.panel-items.is-overflowing {
+  box-shadow: inset 0 -10px 8px -8px rgba(197, 60, 47, 0.4);
+}
+
+/* --- Card de item de rotina -------------------------------------- */
+.panel-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 5%, white);
+  min-height: 10.5mm;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+.panel-item.frame-simples { border-radius: 4px; }
+.panel-item.frame-arredondado { border-radius: 999px; }
+.panel-item.frame-estrelas,
+.panel-item.frame-folhas { border-radius: var(--radius-md); }
+
+.panel-item-icon {
+  flex: 0 0 auto;
+  width: 9.5mm;
+  height: 9.5mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+  background: #fff;
+  overflow: hidden;
+}
+.panel-item-icon svg { width: 72%; height: 72%; }
+.panel-item-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Hora vem ANTES do texto na atividade — campo com cara de campo de verdade */
+.panel-item-time {
+  flex: 0 0 auto;
+  width: 12mm;
+  font-size: 7.5pt;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 5px;
+  background: #fff;
+  outline: none;
+  color: var(--panel-text);
+  padding: 2px 1px;
+  box-sizing: border-box;
+}
+.panel-item-time::placeholder { color: #b0b5bb; }
+
+.panel-item-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 9.5pt;
+  line-height: 1.2;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  color: var(--panel-text);
+  resize: none;
+  overflow: hidden;
+  word-break: break-word;
+}
+.panel-item-text::placeholder { color: #9aa0a6; }
+
+/* Botão "Aa" — abre o popover de fonte/cor daquela atividade */
+.panel-item-style-btn {
+  flex: 0 0 auto;
+  width: 7mm;
+  height: 7mm;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--editor-text-muted);
+  font-family: Georgia, serif;
+  font-size: 8pt;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+.panel-item-style-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Mesmo botão "Aa", reaproveitado na coluna de observações (fora de um .panel-item) */
+.panel-observacoes-style-btn {
+  align-self: flex-end;
+  margin-bottom: 2mm;
+}
+
+/* Enfeites de canto (molduras estrelas/folhas) */
+.frame-corner-wrap { position: absolute; inset: -6px; pointer-events: none; }
+.frame-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+}
+.frame-corner-svg { width: 100%; height: 100%; }
+.frame-corner.tl { top: -3px; left: -3px; }
+.frame-corner.tr { top: -3px; right: -3px; transform: scaleX(-1); }
+.frame-corner.bl { bottom: -3px; left: -3px; transform: scaleY(-1); }
+.frame-corner.br { bottom: -3px; right: -3px; transform: scale(-1, -1); }
+
+/* --- Botão "adicionar linha" (some na impressão) ---------------- */
+.panel-add-item {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 1mm;
+  font-size: 8pt;
+  color: var(--accent);
+  background: transparent;
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-md);
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.panel-add-item:hover { background: var(--accent-soft); }
+.panel-add-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.panel-item-remove {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: #b3372c;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.55;
+}
+.panel-item-remove:hover { opacity: 1; }
+
+/* --- Coluna de observações ---------------------------------------- */
+.panel-column.observacoes .panel-observacoes-text {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 9.5pt;
+  line-height: 1.4;
+  color: var(--panel-text);
+  overflow-y: auto;
+}
+.panel-column.observacoes .panel-observacoes-text.is-overflowing {
+  box-shadow: inset 0 -10px 8px -8px rgba(197, 60, 47, 0.4);
+}
+
+/* --- Rodapé por período --------------------------------------------- */
+.panel-column-footer {
+  flex: 0 0 auto;
+  margin-top: 2mm;
+  padding-top: 2mm;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.panel-footer-phrase {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  font-style: italic;
+  font-size: 7.5pt;
+  color: var(--editor-text-muted);
+  resize: none;
+}
+.panel-suggest-phrase {
+  display: block;
+  margin: 1px auto 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 7.5pt;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.panel-suggest-phrase:hover { opacity: 1; }
+
+</style>
+<style>
+/* ============================================================
+ * Guardião da Rotina — print.css
+ * Regras exclusivas de impressão: A4 exato, some tudo que é UI
+ * do editor, sem sombra/scrollbar, textos editáveis viram texto
+ * estático visualmente (sem contorno de campo).
+ * ============================================================ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  /* Esconde tudo que é UI do editor — só o painel fica visível */
+  .editor-sidebar {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block;
+  }
+
+  .preview-area {
+    display: block;
+    padding: 0;
+    background: #fff;
+    overflow: visible;
+  }
+
+  #painel-impressao-area {
+    position: static;
+    display: block;
+    width: 297mm;
+    height: 210mm;
+    overflow: visible;
+    transform: none !important;
+  }
+
+  .panel {
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    box-shadow: none;
+    page-break-after: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* A folha impressa é física — não rola. O que passar da altura fixa da
+     coluna é cortado aqui (ao contrário da tela, onde .panel-items rola).
+     O aviso visual de overflow (.is-overflowing) também some: no papel
+     ele não ajudaria a mãe a perceber nada, só sobraria uma sombra estranha. */
+  .panel-items,
+  .panel-observacoes-text {
+    overflow: hidden !important;
+  }
+  .panel-items.is-overflowing {
+    box-shadow: none;
+  }
+
+  /* Remove qualquer barra de rolagem/contêiner de rolagem residual */
+  * { scrollbar-width: none; }
+
+  /* Campos de texto: nenhuma borda/placeholder de "campo vazio" na folha impressa */
+  .panel-item-text,
+  .panel-title,
+  .panel-item-time,
+  .panel-footer-phrase,
+  .panel-observacoes-text {
+    caret-color: transparent;
+  }
+  .panel-item-text::placeholder,
+  .panel-footer-phrase::placeholder,
+  .panel-observacoes-text::placeholder {
+    color: transparent;
+  }
+
+  /* Ações que só existem na tela */
+  .panel-add-item,
+  .panel-item-remove,
+  .panel-item-reorder,
+  .panel-item-style-btn,
+  .panel-suggest-phrase {
+    display: none !important;
+  }
+
+  /* Ícone/mascote não devem parecer clicáveis no papel, e um mascote
+     não escolhido não deixa uma moldura tracejada vazia no papel */
+  .panel-item-icon,
+  .panel-mascot {
+    cursor: default;
+  }
+  .panel-mascot.is-empty {
+    border: none !important;
+  }
+  .panel-mascot.is-empty::after {
+    content: none;
+  }
+
+  .panel-item {
+    break-inside: avoid;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ==================== BARRA LATERAL (não aparece na impressão) ==================== -->
+  <aside class="editor-sidebar">
+    <h1>Guardião da Rotina</h1>
+    <p class="app-subtitle">Monte o painel, veja a prévia ao lado e imprima em A4.</p>
+
+    <details class="editor-section" open>
+      <summary>📝 Título</summary>
+      <div class="editor-section-body">
+        <div class="field">
+          <label for="input-title-font">Fonte do título</label>
+          <select id="input-title-font" data-field-meta="titleFontFamily" data-role="font-select"></select>
+        </div>
+        <div class="field">
+          <label>Estilo do título</label>
+          <div class="chip-grid" data-role="title-style-grid"></div>
+        </div>
+        <div class="field">
+          <label>Tamanho da fonte</label>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" data-action="title-font-size-dec">−</button>
+            <span class="stepper-value" data-role="title-font-size-value">22pt</span>
+            <button type="button" class="stepper-btn" data-action="title-font-size-inc">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Espaçamento entre letras</label>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" data-action="title-letter-spacing-dec">−</button>
+            <span class="stepper-value" data-role="title-letter-spacing-value">0.5px</span>
+            <button type="button" class="stepper-btn" data-action="title-letter-spacing-inc">+</button>
+          </div>
+        </div>
+        <p class="field-value-hint">O texto "GUARDIÃO [NOME]" é editado direto no cabeçalho do painel, ao lado.</p>
+      </div>
+    </details>
+
+    <details class="editor-section" open>
+      <summary>🎨 Aparência</summary>
+      <div class="editor-section-body">
+        <div class="field">
+          <label for="input-accent-color">Cor de destaque</label>
+          <div class="field-row">
+            <input type="color" id="input-accent-color" data-field-meta="accentColor" value="#4F86C6">
+            <span class="field-value-hint">Bordas, cabeçalhos e ícones usam esta cor.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="input-frame-style">Moldura dos cards</label>
+          <select id="input-frame-style" data-field-meta="frameStyle" data-role="frame-style-select"></select>
+        </div>
+
+        <div class="field">
+          <label for="input-background-pattern">Padrão de fundo</label>
+          <select id="input-background-pattern" data-field-meta="backgroundPattern" data-role="background-pattern-select"></select>
+        </div>
+
+        <div class="field" data-role="background-color-row" hidden>
+          <label for="input-bg-solid-color">Cor de fundo</label>
+          <input type="color" id="input-bg-solid-color" data-field-meta="backgroundSolidColor" value="#FFF4E0">
+        </div>
+
+        <div class="field" data-role="background-photo-row" hidden>
+          <label>Foto de fundo</label>
+          <div class="upload-dropzone" data-action="upload-background-photo">🖼️ Enviar foto de fundo</div>
+          <p class="field-value-hint">💡 Dica: para tirar o fundo da foto antes de enviar, use um site gratuito como
+            <a href="https://www.remove.bg" target="_blank" rel="noopener">remove.bg</a>.</p>
+        </div>
+
+        <div class="field" data-role="background-opacity-row" hidden>
+          <label for="input-bg-opacity">Opacidade do fundo</label>
+          <input type="range" id="input-bg-opacity" data-field-meta="backgroundOpacity" min="0" max="0.6" step="0.02" value="0.15">
+        </div>
+      </div>
+    </details>
+
+    <details class="editor-section" open>
+      <summary>🧸 Mascote</summary>
+      <div class="editor-section-body">
+        <div class="field">
+          <div class="upload-preview upload-dropzone" data-role="mascot-preview" style="cursor:pointer;">
+            <span class="field-value-hint">🧸 Escolher mascote</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="editor-section">
+      <summary>📋 Resumo da rotina</summary>
+      <div class="editor-section-body">
+        <div class="field-row"><span>Manhã:</span> <span data-role="item-count-manha">0/10</span></div>
+        <div class="field-row"><span>Tarde:</span> <span data-role="item-count-tarde">0/10</span></div>
+        <div class="field-row"><span>Noite:</span> <span data-role="item-count-noite">0/10</span></div>
+        <p class="field-value-hint">Clique em "+ adicionar linha" dentro de cada coluna do painel para incluir atividades. Clique no quadrado de ícone de cada linha para escolhê-lo.</p>
+      </div>
+    </details>
+
+    <details class="editor-section" open>
+      <summary>🔍 Zoom da prévia</summary>
+      <div class="editor-section-body">
+        <input type="range" data-role="zoom-range" min="40" max="100" value="70">
+      </div>
+    </details>
+
+    <details class="editor-section" open>
+      <summary>💾 Ações</summary>
+      <div class="editor-section-body">
+        <button type="button" class="btn btn-primary btn-block" data-action="print-panel">🖨️ Imprimir / salvar em PDF</button>
+        <div class="btn-row">
+          <button type="button" class="btn btn-sm" data-action="save-now">Salvar agora</button>
+          <button type="button" class="btn btn-sm" data-action="export-json">Exportar</button>
+          <button type="button" class="btn btn-sm" data-action="import-json">Importar</button>
+        </div>
+        <input type="file" accept="application/json" data-role="import-json-input" hidden>
+        <button type="button" class="btn btn-sm" data-action="reset-panel">🗑️ Começar painel novo</button>
+        <p class="field-value-hint">O painel é salvo automaticamente neste navegador. Use "Exportar" para guardar um arquivo de backup ou continuar em outro computador.</p>
+      </div>
+    </details>
+  </aside>
+
+  <!-- ==================== PRÉVIA (o que vira o A4 impresso) ==================== -->
+  <main class="preview-area">
+    <div id="painel-impressao-area"><!-- preenchido via JS por render-panel.js --></div>
+  </main>
+
+</div>
+
+<!-- ==================== SCRIPTS (ordem de dependência importa) ==================== -->
+<script>
+/* ============================================================
+ * Guardião da Rotina — utils/helpers.js
+ * Funções utilitárias genéricas, sem dependência de estado ou DOM.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  /**
+   * Adia a execução de fn até que pare de ser chamada por `wait` ms.
+   * Usado para não re-renderizar/salvar a cada tecla digitada.
+   */
+  function debounce(fn, wait) {
+    var timer = null;
+    return function debounced() {
+      var args = arguments;
+      var ctx = this;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        fn.apply(ctx, args);
+      }, wait);
+    };
+  }
+
+  /** Restringe um número ao intervalo [min, max]. */
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /**
+   * Remove marcação HTML de um texto livre digitado pelo usuário,
+   * evitando que algo como "<img onerror=...>" vire HTML de verdade
+   * quando inserido via innerHTML no painel.
+   */
+  function sanitizeText(text) {
+    if (text === null || text === undefined) return '';
+    var div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  /** Gera um id curto e razoavelmente único (sem dependência externa). */
+  function generateId(prefix) {
+    var random = Math.random().toString(36).slice(2, 8);
+    var time = Date.now().toString(36).slice(-4);
+    return (prefix ? prefix + '-' : '') + time + random;
+  }
+
+  /**
+   * Lê um File (input type="file") e devolve uma Promise com a dataURL,
+   * já redimensionada para no máximo `maxDim` px no maior lado — evita
+   * que uma foto de 8MB do celular estoure o localStorage.
+   */
+  function fileToResizedDataURL(file, maxDim, quality) {
+    maxDim = maxDim || 1200;
+    quality = quality || 0.85;
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function () { reject(reader.error); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error('Não foi possível ler a imagem.')); };
+        img.onload = function () {
+          var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          var w = Math.max(1, Math.round(img.width * scale));
+          var h = Math.max(1, Math.round(img.height * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          var mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+          resolve(canvas.toDataURL(mime, quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /** Dispara o download de um arquivo de texto no navegador (para export JSON). */
+  function downloadTextFile(filename, content, mime) {
+    var blob = new Blob([content], { type: mime || 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  Guardiao.Helpers = {
+    debounce: debounce,
+    clamp: clamp,
+    sanitizeText: sanitizeText,
+    generateId: generateId,
+    fileToResizedDataURL: fileToResizedDataURL,
+    downloadTextFile: downloadTextFile
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/icon-bank.js
+ *
+ * Banco de ~45 ícones SVG organizados por categoria. Todos em
+ * traço simples (stroke="currentColor"), sem cor fixa, para
+ * herdar a cor de destaque escolhida pela mãe e imprimir bem
+ * mesmo em preto-e-branco. viewBox 24x24 padronizado.
+ *
+ * Cada ícone: { id, label, svg }. `svg` é uma string completa
+ * de <svg>, pronta para ser injetada via innerHTML.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  // Atributos padrão repetidos em todo ícone, para manter o traço consistente.
+  var A = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+
+  function svg(inner) {
+    return '<svg ' + A + '>' + inner + '</svg>';
+  }
+
+  // Ícone com pequenos detalhes preenchidos (olhos, migalhas, pingos) além do traço.
+  function dot(cx, cy, r) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="currentColor" stroke="none"/>';
+  }
+
+  var ICON_CATEGORIES = [
+    {
+      id: 'higiene',
+      label: 'Higiene pessoal',
+      icons: [
+        { id: 'escovar-dentes', label: 'Escovar os dentes', svg: svg(
+          '<rect x="9.5" y="3" width="3.2" height="5.5" rx="1"/>' +
+          '<path d="M11.1 8.5L6 19c-.5 1.2.6 2.3 1.8 1.8L19 16"/>' +
+          '<path d="M9 6.2h4M9 8.2h4" stroke-width="1.2"/>'
+        )},
+        { id: 'tomar-banho', label: 'Tomar banho', svg: svg(
+          '<path d="M8 4.5a2.5 2.5 0 015 0v2h2a2 2 0 012 2v.5H6v-.5a2 2 0 012-2h0z"/>' +
+          '<path d="M4.5 12.5h15"/>' +
+          '<path d="M8 15.5v1.2M12 15.5v1.2M16 15.5v1.2M9 18.5v1.2M15 18.5v1.2"/>'
+        )},
+        { id: 'lavar-maos', label: 'Lavar as mãos', svg: svg(
+          '<path d="M7 21v-6.5c0-1 .8-1.8 1.8-1.8s1.7.8 1.7 1.8V16"/>' +
+          '<path d="M10.5 14.7v-1.2c0-1 .8-1.7 1.7-1.7s1.8.7 1.8 1.7v2"/>' +
+          '<path d="M14 15v-.8c0-1 .8-1.7 1.7-1.7s1.8.7 1.8 1.7V18c0 1.7-1.4 3-3.1 3H10c-1.4 0-2.3-.5-3-1.6L5.3 16.6c-.5-.7-.3-1.5.4-1.9.6-.3 1.3-.2 1.8.4"/>' +
+          '<path d="M18.5 6c.6.8 1 1.7 1 2.7 0 2-1.6 3.3-3.5 3.3S12.5 10.7 12.5 8.7c0-1.9 2-4 3.5-5.7 0.5.6 1 1.2 1.4 1.8"/>'
+        )},
+        { id: 'pentear-cabelo', label: 'Pentear o cabelo', svg: svg(
+          '<circle cx="12" cy="8" r="4.5"/>' +
+          '<path d="M8 10.5c-.8 1.5-1.2 3-1.2 5"/>' +
+          '<path d="M5 15h9M6 15v3M8.3 15v3M10.6 15v3M13 15v3"/>'
+        )},
+        { id: 'usar-banheiro', label: 'Usar o banheiro', svg: svg(
+          '<path d="M6.5 10.5h11l-1 8a2 2 0 01-2 1.8h-5a2 2 0 01-2-1.8z"/>' +
+          '<path d="M6 10.5c0-2.5.6-4 2-5.2M18 10.5c0-2.5-.6-4-2-5.2"/>' +
+          '<path d="M6.2 7.3h11.6"/>'
+        )},
+        { id: 'cortar-unhas', label: 'Cortar as unhas', svg: svg(
+          '<rect x="9" y="3" width="6" height="9" rx="2.5"/>' +
+          '<path d="M9 12l-3 7M15 12l3 7M9.5 15.5h5"/>'
+        )},
+        { id: 'lavar-rosto', label: 'Lavar o rosto', svg: svg(
+          '<circle cx="12" cy="11" r="5.5"/>' +
+          dot(10.2, 10, 0.7) + dot(13.8, 10, 0.7) +
+          '<path d="M10 13.2c.6.6 3.4.6 4 0"/>' +
+          '<path d="M4.5 6.5c.6 1 .6 2 0 3M19.5 6.5c-.6 1-.6 2 0 3"/>'
+        )}
+      ]
+    },
+    {
+      id: 'alimentacao',
+      label: 'Alimentação',
+      icons: [
+        { id: 'cafe-da-manha', label: 'Café da manhã', svg: svg(
+          '<path d="M4.5 12.5h13v3a4 4 0 01-4 4h-5a4 4 0 01-4-4z"/>' +
+          '<path d="M17.5 13h1.7a2 2 0 010 4h-1.9"/>' +
+          '<path d="M8 7c-.6.7-.6 1.4 0 2M11 7c-.6.7-.6 1.4 0 2M14 7c-.6.7-.6 1.4 0 2" stroke-width="1.3"/>'
+        )},
+        { id: 'almoco', label: 'Almoço', svg: svg(
+          '<circle cx="12" cy="12" r="7.5"/>' +
+          '<circle cx="12" cy="12" r="3.2"/>' +
+          '<path d="M4 5.5v3M2.7 5.5v3M5.3 5.5v3M4 8.5v3.5"/>' +
+          '<path d="M20 5.5c0 1.6-1 2.4-1 3.5s.4 1.6 1 1.6V20"/>'
+        )},
+        { id: 'jantar', label: 'Jantar', svg: svg(
+          '<path d="M3.5 14a8.5 4.5 0 0117 0z"/>' +
+          '<path d="M3.5 14h17"/>' +
+          '<path d="M11.5 8.5V5M9.8 5h3.4"/>'
+        )},
+        { id: 'lanche', label: 'Lanche', svg: svg(
+          '<path d="M12 4.5a7.5 7.5 0 107.5 8c-1 .5-2.3 0-2.3-1.3 0-.8.6-1.2.6-2 0-1-.8-1.7-1.8-1.5-1 .2-1.8-.6-1.6-1.6.2-1-.5-1.6-1.4-1.6z"/>' +
+          dot(9, 12, 0.7) + dot(13, 15.3, 0.7) + dot(10.5, 16.2, 0.6)
+        )},
+        { id: 'beber-agua', label: 'Beber água', svg: svg(
+          '<path d="M7 4h10l-1.2 15a2 2 0 01-2 1.8h-3.6a2 2 0 01-2-1.8z"/>' +
+          '<path d="M7.6 10.5h8.8"/>' +
+          '<path d="M12 2.2c.7.9.7 1.4 0 2.2-.7-.8-.7-1.3 0-2.2z" fill="currentColor" stroke="none"/>'
+        )},
+        { id: 'comer-fruta', label: 'Comer fruta', svg: svg(
+          '<path d="M12 8.3c2.6-2.4 6-1.6 7 1 1.2 3-1 8.7-4.4 10.4-1 .5-1.8.5-2.6 0-3.4-1.7-5.6-7.4-4.4-10.4 1-2.6 4.4-3.4 7-1z"/>' +
+          '<path d="M12 8.3V6"/>' +
+          '<path d="M12 6c.3-1.4 1.4-2.2 2.8-2.2-.1 1.4-1.2 2.4-2.8 2.2z"/>'
+        )}
+      ]
+    },
+    {
+      id: 'domesticas',
+      label: 'Responsabilidades domésticas',
+      icons: [
+        { id: 'arrumar-cama', label: 'Arrumar a cama', svg: svg(
+          '<path d="M2.5 18.5v-6a2 2 0 012-2h15a2 2 0 012 2v6"/>' +
+          '<path d="M2.5 18.5h19M4.5 12.5V8.8a1.3 1.3 0 011.3-1.3h4a1.3 1.3 0 011.3 1.3v.7"/>' +
+          '<path d="M12.5 9c.3-1 1.2-1.5 2.5-1.5s2.6.9 3 2" stroke-width="1.3"/>'
+        )},
+        { id: 'guardar-brinquedos', label: 'Guardar os brinquedos', svg: svg(
+          '<path d="M4 10.5h16l-1.3 9a1.7 1.7 0 01-1.7 1.5H7a1.7 1.7 0 01-1.7-1.5z"/>' +
+          '<path d="M2.5 10.5h19"/>' +
+          '<circle cx="9.5" cy="7" r="2"/>' +
+          '<rect x="13" y="5.2" width="3.5" height="3.5" rx="0.6" transform="rotate(15 14.75 7)"/>'
+        )},
+        { id: 'ajudar-cozinha', label: 'Ajudar na cozinha', svg: svg(
+          '<path d="M4.5 11.5h14v3a5 5 0 01-5 5h-4a5 5 0 01-5-5z"/>' +
+          '<path d="M17 8.5c1.4 0 2.5 1 2.5 2.2M4.5 11.5c0-3.6 3-6 7.5-6s7.5 2.4 7.5 6"/>' +
+          '<path d="M9.5 5.2v-2M12 5v-2.3M14.5 5.2v-2"/>'
+        )},
+        { id: 'cuidar-pet', label: 'Cuidar do bichinho', svg: svg(
+          '<circle cx="12" cy="15" r="3.4"/>' +
+          '<circle cx="7" cy="9" r="1.7"/>' +
+          '<circle cx="12" cy="6.8" r="1.7"/>' +
+          '<circle cx="17" cy="9" r="1.7"/>' +
+          '<circle cx="9.4" cy="12.2" r="1.5"/>' +
+          '<circle cx="14.6" cy="12.2" r="1.5"/>'
+        )},
+        { id: 'jogar-lixo-fora', label: 'Jogar o lixo fora', svg: svg(
+          '<path d="M5.5 7.5h13l-1.1 12a2 2 0 01-2 1.8H8.6a2 2 0 01-2-1.8z"/>' +
+          '<path d="M3.5 7.5h17M9 7.5V5a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 5v2.5"/>' +
+          '<path d="M10.3 11v6.5M13.7 11v6.5"/>'
+        )},
+        { id: 'dobrar-roupas', label: 'Dobrar roupas', svg: svg(
+          '<path d="M9 3.5h6l1 2.3 3 .7-1 3.5h-2.5V19a1 1 0 01-1 1h-5a1 1 0 01-1-1v-9H6l-1-3.5 3-.7z"/>' +
+          '<path d="M9.5 10.5h5" stroke-width="1.2"/>'
+        )}
+      ]
+    },
+    {
+      id: 'escola',
+      label: 'Escola e aprendizado',
+      icons: [
+        { id: 'mochila-escolar', label: 'Preparar a mochila', svg: svg(
+          '<path d="M7 9V6.5a5 5 0 0110 0V9"/>' +
+          '<path d="M5.5 9h13a1.5 1.5 0 011.5 1.5V19a2 2 0 01-2 2H6a2 2 0 01-2-2v-8.5A1.5 1.5 0 015.5 9z"/>' +
+          '<path d="M9.5 12.5h5M10 9v3"/>' +
+          '<rect x="10" y="15" width="4" height="3" rx="0.6"/>'
+        )},
+        { id: 'licao-de-casa', label: 'Fazer a lição de casa', svg: svg(
+          '<rect x="4.5" y="3.5" width="15" height="17" rx="1.5"/>' +
+          '<path d="M8 8h8M8 11.5h8"/>' +
+          '<path d="M7.5 15.5l2 2 3.5-4"/>'
+        )},
+        { id: 'ler-livro', label: 'Ler um livro', svg: svg(
+          '<path d="M12 6.2c-1.6-1.3-4-1.7-7-1.2v12c3-.5 5.4-.1 7 1.2 1.6-1.3 4-1.7 7-1.2V5c-3-.5-5.4-.1-7 1.2z"/>' +
+          '<path d="M12 6.2V18.2"/>'
+        )},
+        { id: 'aula-computador', label: 'Aula no computador', svg: svg(
+          '<rect x="3.5" y="4.5" width="17" height="11" rx="1.3"/>' +
+          '<path d="M9 19.5h6M12 15.5v4"/>' +
+          '<path d="M8.5 8l2 2-2 2M13 12h2.5" stroke-width="1.3"/>'
+        )},
+        { id: 'escrever', label: 'Escrever', svg: svg(
+          '<path d="M5 19.5l.7-3.3L15.5 6.4a1.8 1.8 0 012.6 0l.5.5a1.8 1.8 0 010 2.6L8.8 19.3z"/>' +
+          '<path d="M14 8.3l2.6 2.6"/>' +
+          '<path d="M5 19.5l3.3-.5"/>'
+        )},
+        { id: 'ir-para-escola', label: 'Ir para a escola', svg: svg(
+          '<rect x="3" y="7" width="18" height="9" rx="2"/>' +
+          '<path d="M3 12h18M6 7V5.5A1.5 1.5 0 017.5 4h9A1.5 1.5 0 0118 5.5V7"/>' +
+          '<circle cx="7.5" cy="18.5" r="1.4"/><circle cx="16.5" cy="18.5" r="1.4"/>'
+        )}
+      ]
+    },
+    {
+      id: 'lazer',
+      label: 'Lazer',
+      icons: [
+        { id: 'assistir-tv', label: 'Assistir TV', svg: svg(
+          '<rect x="3" y="5" width="18" height="12" rx="1.5"/>' +
+          '<path d="M8.5 20.5h7M12 17v3.5"/>' +
+          '<path d="M8 10l3 2-3 2z" fill="currentColor" stroke="none"/>'
+        )},
+        { id: 'desenhar', label: 'Desenhar', svg: svg(
+          '<path d="M9.5 20.5c3-.5 5-1.5 6.5-3.5-1.5-.6-3-.3-4.3.6-1.2 1-2 1.9-2.2 2.9z"/>' +
+          '<path d="M15.8 17.1L19 8.6a1.6 1.6 0 00-1-2.1h0a1.6 1.6 0 00-2 1L12.9 16"/>' +
+          '<path d="M4.5 20.5c1.5-2.5 2.5-6 3-11"/>'
+        )},
+        { id: 'videogame', label: 'Jogar videogame', svg: svg(
+          '<path d="M6.5 8.5h11a3.5 3.5 0 013.4 4.4l-.6 2.3a2.2 2.2 0 01-3.9.8L15 14H9l-1.4 2a2.2 2.2 0 01-3.9-.8l-.6-2.3a3.5 3.5 0 013.4-4.4z"/>' +
+          '<path d="M8 10.7v2.6M6.7 12h2.6" stroke-width="1.3"/>' +
+          dot(16.3, 10.7, 0.75) + dot(18, 12.4, 0.75)
+        )},
+        { id: 'brincar-brinquedos', label: 'Brincar com brinquedos', svg: svg(
+          '<rect x="4" y="12.5" width="6" height="6" rx="0.7"/>' +
+          '<rect x="12.5" y="14.5" width="4" height="4" rx="0.7"/>' +
+          '<circle cx="17.5" cy="9" r="2.7"/>' +
+          '<rect x="7" y="7" width="4.5" height="4.5" rx="0.7" transform="rotate(20 9.25 9.25)"/>'
+        )},
+        { id: 'quebra-cabeca', label: 'Montar quebra-cabeça', svg: svg(
+          '<path d="M5 5h5.3a1.5 1.5 0 010 3 1.5 1.5 0 000 3H19v6h-5.3a1.5 1.5 0 000 3 1.5 1.5 0 01-3 0H5v-6a1.5 1.5 0 013 0 1.5 1.5 0 000-3H5z"/>'
+        )},
+        { id: 'ouvir-musica', label: 'Ouvir música', svg: svg(
+          '<path d="M4 15.5V9a8 8 0 0116 0v6.5"/>' +
+          '<rect x="3" y="14" width="4" height="5.5" rx="1.5"/>' +
+          '<rect x="17" y="14" width="4" height="5.5" rx="1.5"/>'
+        )}
+      ]
+    },
+    {
+      id: 'esportes',
+      label: 'Esportes',
+      icons: [
+        { id: 'jogar-bola', label: 'Jogar bola', svg: svg(
+          '<circle cx="12" cy="12" r="8.5"/>' +
+          '<path d="M12 7.2l3.6 2.6-1.4 4.2H9.8l-1.4-4.2z"/>' +
+          '<path d="M12 7.2V4M15.6 9.8l3-1M14.2 14l2 2.7M9.8 14l-2 2.7M8.4 9.8l-3-1"/>'
+        )},
+        { id: 'andar-bicicleta', label: 'Andar de bicicleta', svg: svg(
+          '<circle cx="6" cy="17" r="3.2"/>' +
+          '<circle cx="18" cy="17" r="3.2"/>' +
+          '<path d="M6 17l4.5-9h5L18 17M10.5 8h3M8.3 17h9.4"/>' +
+          '<circle cx="14.5" cy="6" r="1.6"/>'
+        )},
+        { id: 'correr', label: 'Correr', svg: svg(
+          '<circle cx="14.5" cy="4.5" r="1.7"/>' +
+          '<path d="M9 21l2.2-4.7-1.7-3.3 3-2.6 1.3 2.6 4 1.2"/>' +
+          '<path d="M11.2 12.4L8 10.6l-2.5 1.7M13.5 15.6l2 1.3-1 4"/>'
+        )},
+        { id: 'nadar', label: 'Nadar', svg: svg(
+          '<circle cx="6" cy="7" r="1.7"/>' +
+          '<path d="M8.5 13.5l3-2.5 2.6 2 4.4-2.2"/>' +
+          '<path d="M2.5 18c1.4 1.3 2.8 1.3 4.2 0 1.4 1.3 2.8 1.3 4.2 0 1.4 1.3 2.8 1.3 4.2 0 1.4 1.3 2.8 1.3 4.2 0"/>'
+        )},
+        { id: 'alongar', label: 'Alongar', svg: svg(
+          '<circle cx="12" cy="3.7" r="1.7"/>' +
+          '<path d="M12 6.5v6.5M12 8l-5 2.5M12 8l5 2.5"/>' +
+          '<path d="M12 13l-3.5 7.5M12 13l3.5 7.5"/>'
+        )}
+      ]
+    },
+    {
+      id: 'espiritualidade',
+      label: 'Espiritualidade',
+      icons: [
+        { id: 'orar', label: 'Orar', svg: svg(
+          '<path d="M12 3.5v6M9 5.2l1.5 3M15 5.2l-1.5 3"/>' +
+          '<path d="M8.5 21v-6.3c0-2.5 1.6-4.5 3.5-6.2 1.9 1.7 3.5 3.7 3.5 6.2V21"/>' +
+          '<path d="M6.5 21h11"/>'
+        )},
+        { id: 'meditar', label: 'Meditar', svg: svg(
+          '<circle cx="12" cy="6" r="2"/>' +
+          '<path d="M12 8.5v3.5"/>' +
+          '<path d="M6 19c1-3 3.2-5 6-5s5 2 6 5"/>' +
+          '<path d="M8.5 12.5c-1.5 1-2.5 2.3-3 3.8M15.5 12.5c1.5 1 2.5 2.3 3 3.8"/>'
+        )},
+        { id: 'gratidao', label: 'Momento de gratidão', svg: svg(
+          '<path d="M4 13.5c0-1.5.7-2.3 1.7-2.3s1.6.9 1.6 2v2M7.3 13v-3c0-1.2.7-1.9 1.6-1.9s1.7.7 1.7 2v3.2"/>' +
+          '<path d="M10.6 13.3v-2.6c0-1.2.7-1.9 1.6-1.9s1.7.7 1.7 2v3.5"/>' +
+          '<path d="M13.9 14v-1.6c0-1.1.7-1.8 1.6-1.8s1.7.8 1.7 1.9v3.4c0 2.5-1.8 4.6-4.5 4.6h-2c-1.7 0-2.7-.6-3.6-1.9L5 15.2"/>' +
+          dot(18, 5, 0.8) + '<path d="M18 2v1.3M18 6.7V8M15.5 5h1.3M19.2 5h1.3" stroke-width="1.1"/>'
+        )},
+        { id: 'momento-silencio', label: 'Momento de silêncio', svg: svg(
+          '<path d="M9 3.5h4c-1 1.6-1 3 0 4.5h-4a4.5 4.5 0 010-4.5z"/>' +
+          '<rect x="10.3" y="8" width="1.4" height="2.5"/>' +
+          '<path d="M6.5 20.5h9l-1.3-9H7.8z"/>'
+        )}
+      ]
+    },
+    {
+      id: 'sono',
+      label: 'Sono',
+      icons: [
+        { id: 'dormir', label: 'Dormir', svg: svg(
+          '<path d="M16.5 4.2A7.5 7.5 0 1019.8 17a8.5 8.5 0 01-3.3-12.8z"/>' +
+          '<path d="M18 3l.7 1.7L20.5 5.4l-1.8.7L18 7.8l-.7-1.7-1.8-.7 1.8-.7z" fill="currentColor" stroke="none"/>'
+        )},
+        { id: 'hora-de-dormir', label: 'Hora de dormir', svg: svg(
+          '<circle cx="12" cy="13.5" r="7"/>' +
+          '<path d="M12 9.5v4l2.7 1.6"/>' +
+          '<path d="M9 3.5h6M12 3.5v2.3M5.5 6.2l1.5 1.5M18.5 6.2l-1.5 1.5" stroke-width="1.3"/>'
+        )},
+        { id: 'vestir-pijama', label: 'Vestir o pijama', svg: svg(
+          '<path d="M9 3.5H15l1 2.3 3 .7-1 3.5h-2.5V19a1 1 0 01-1 1h-5a1 1 0 01-1-1v-9H6l-1-3.5 3-.7z"/>' +
+          dot(10.3, 13.5, 0.7) + dot(13.7, 15, 0.7) + dot(11, 17, 0.7)
+        )},
+        { id: 'ler-antes-de-dormir', label: 'Ler antes de dormir', svg: svg(
+          '<path d="M12 8c-1.4-1.1-3.5-1.4-6-1v10c2.5-.4 4.6-.1 6 1 1.4-1.1 3.5-1.4 6-1V7c-2.5-.4-4.6-.1-6 1z"/>' +
+          '<path d="M17.5 3.3a3.3 3.3 0 10-.3 3.6 2.6 2.6 0 01.3-3.6z"/>'
+        )},
+        { id: 'guardar-celular', label: 'Guardar o celular', svg: svg(
+          '<rect x="7.5" y="2.5" width="9" height="15" rx="2"/>' +
+          '<path d="M10.5 15h3" stroke-width="1.3"/>' +
+          '<path d="M5 19.5h14M8.5 22h7" stroke-width="1.3"/>' +
+          '<path d="M18.3 5.3a2.6 2.6 0 10-.3 3.6 2 2 0 01.3-3.6z" fill="currentColor" stroke="none"/>'
+        )}
+      ]
+    }
+  ];
+
+  // Índice plano id -> ícone, para lookup rápido no render.
+  var ICON_INDEX = {};
+  ICON_CATEGORIES.forEach(function (cat) {
+    cat.icons.forEach(function (icon) {
+      ICON_INDEX[icon.id] = icon;
+    });
+  });
+
+  function getIconById(id) {
+    return ICON_INDEX[id] || null;
+  }
+
+  Guardiao.IconBank = {
+    categories: ICON_CATEGORIES,
+    getById: getIconById
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/mascot-bank.js
+ *
+ * Pequeno banco de mascotes prontos (além do upload da própria
+ * mãe). Todos em traço simples com currentColor, para acompanhar
+ * a cor de destaque escolhida e imprimir bem mesmo em impressora
+ * preto-e-branco.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var MASCOT_BANK = [
+    {
+      id: 'estrela',
+      label: 'Estrela',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7-5.4-4.7 7.1-.7z"/><circle cx="9.7" cy="12" r="0.8" fill="currentColor" stroke="none"/><circle cx="14.3" cy="12" r="0.8" fill="currentColor" stroke="none"/><path d="M10 14.3c0.6 0.7 3.4 0.7 4 0" stroke-linecap="round"/></svg>'
+    },
+    {
+      id: 'nuvem',
+      label: 'Nuvem',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M6.5 17.5a4 4 0 010-8 5 5 0 019.6-1.6A3.8 3.8 0 0119 15.2a3.8 3.8 0 01-.5 2.3z"/><circle cx="9.5" cy="14.2" r="0.8" fill="currentColor" stroke="none"/><circle cx="13.5" cy="14.2" r="0.8" fill="currentColor" stroke="none"/><path d="M10 16.3c0.5 0.6 2.6 0.6 3.1 0"/></svg>'
+    },
+    {
+      id: 'sol',
+      label: 'Sol',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.4 5.6l-1.5 1.5M7.1 16.9l-1.5 1.5M18.4 18.4l-1.5-1.5M7.1 7.1L5.6 5.6"/><circle cx="10.2" cy="11.3" r="0.7" fill="currentColor" stroke="none"/><circle cx="13.8" cy="11.3" r="0.7" fill="currentColor" stroke="none"/><path d="M10.3 13.5c0.5 0.6 2.4 0.6 2.9 0" stroke-width="1.2"/></svg>'
+    },
+    {
+      id: 'foguete',
+      label: 'Foguete',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2.5c2.6 2 3.8 5.3 3.8 8.6 0 2.4-.7 4.4-1.4 5.7h-4.8c-.7-1.3-1.4-3.3-1.4-5.7 0-3.3 1.2-6.6 3.8-8.6z"/><circle cx="12" cy="9.5" r="1.4"/><path d="M8.2 13.5l-2.7 1.8 1 3.2M15.8 13.5l2.7 1.8-1 3.2"/><path d="M10 17.8l-.6 3.2M14 17.8l.6 3.2"/></svg>'
+    },
+    {
+      id: 'ursinho',
+      label: 'Ursinho',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="6" cy="6.5" r="2"/><circle cx="18" cy="6.5" r="2"/><circle cx="12" cy="13" r="7.5"/><circle cx="9.2" cy="12" r="0.8" fill="currentColor" stroke="none"/><circle cx="14.8" cy="12" r="0.8" fill="currentColor" stroke="none"/><circle cx="12" cy="14.4" r="1.3" fill="currentColor" stroke="none"/><path d="M12 15.7v0.8M9.5 17.5c1 .8 4 .8 5 0"/></svg>'
+    },
+    {
+      id: 'gatinho',
+      label: 'Gatinho',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M5.5 9L7 4l3.5 3.5h3L17 4l1.5 5"/><circle cx="12" cy="13" r="7"/><circle cx="9.3" cy="12.2" r="0.8" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12.2" r="0.8" fill="currentColor" stroke="none"/><path d="M12 13.6l-0.7 1h1.4z" fill="currentColor" stroke="none"/><path d="M9.5 16.3c0.8 0.6 3.2 0.6 4 0M6 13.5H4M6.4 15.5l-1.7 1M18 13.5h2M17.6 15.5l1.7 1"/></svg>'
+    },
+    {
+      id: 'coracao',
+      label: 'Coração',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M12 20.3S3.5 15.2 3.5 9.4A4.4 4.4 0 0112 6.6a4.4 4.4 0 018.5 2.8c0 5.8-8.5 10.9-8.5 10.9z"/><circle cx="9.8" cy="10.5" r="0.7" fill="currentColor" stroke="none"/><circle cx="14.2" cy="10.5" r="0.7" fill="currentColor" stroke="none"/><path d="M10 12.5c0.5 0.6 2.5 0.6 3 0"/></svg>'
+    },
+    {
+      id: 'planta',
+      label: 'Planta',
+      svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21v-8"/><path d="M12 13c0-3.5-2.5-5.5-6-5.5C6 11 8 13 12 13zM12 13c0-4 3-6.5 6.5-6.5C18.5 10.5 16 13 12 13z"/><rect x="7" y="17" width="10" height="4" rx="1"/><circle cx="9.5" cy="19.2" r="0.6" fill="currentColor" stroke="none"/><circle cx="14.5" cy="19.2" r="0.6" fill="currentColor" stroke="none"/><path d="M10.7 20.2c0.4 0.4 1.8 0.4 2.2 0"/></svg>'
+    }
+  ];
+
+  Guardiao.MascotBank = MASCOT_BANK;
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/phrases-bank.js
+ *
+ * Frases sugeridas para o rodapé de cada período. São só um
+ * ponto de partida editável — a mãe pode apagar e escrever a
+ * frase que quiser diretamente no campo do rodapé.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var PHRASES_BANK = {
+    manha: [
+      'Um novo dia, uma nova conquista!',
+      'Devagar e sempre, você consegue!',
+      'Bom dia! Vamos começar com calma.'
+    ],
+    tarde: [
+      'Continue firme, você está indo bem!',
+      'Um passo de cada vez.',
+      'Metade do caminho já foi!'
+    ],
+    noite: [
+      'Hora de descansar. Você fez o seu melhor hoje!',
+      'Amanhã é um novo dia.',
+      'Durma bem, guerreiro(a)!'
+    ]
+  };
+
+  Guardiao.PhrasesBank = PHRASES_BANK;
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/frame-styles.js
+ *
+ * Estilos de moldura disponíveis para os cards de rotina.
+ * "simples" e "arredondado" são resolvidos só com CSS (ver
+ * panel.css, classes .frame-simples / .frame-arredondado). Os
+ * demais usam um pequeno enfeite SVG repetido nos 4 cantos do
+ * card (ver render-panel.js), porque CSS puro não desenha bem
+ * essas formas — todos herdam a cor de destaque via currentColor.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var CORNER_STAR = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><path fill="currentColor" d="M12 1.5l2.6 6.2 6.7.6-5.1 4.4 1.6 6.6L12 15.9l-5.8 3.4 1.6-6.6-5.1-4.4 6.7-.6z"/></svg>';
+
+  var CORNER_LEAF = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><path fill="currentColor" fill-opacity="0.85" stroke="currentColor" stroke-width="1.2" d="M4 20c7-1 12-6 13-16-9 1-14 6-13 16zm0 0c1-4 4-7 8-9"/></svg>';
+
+  var CORNER_HEART = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><path fill="currentColor" d="M12 20.3S4 15.2 4 9.4A4.4 4.4 0 0112 6.6a4.4 4.4 0 018 2.8c0 5.8-8 10.9-8 10.9z"/></svg>';
+
+  var CORNER_PLANET = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><circle cx="12" cy="12" r="5" fill="currentColor"/><ellipse cx="12" cy="12" rx="10.5" ry="3.2" fill="none" stroke="currentColor" stroke-width="1.6" transform="rotate(-20 12 12)"/></svg>';
+
+  var CORNER_FLOWER = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><g fill="currentColor"><circle cx="12" cy="6.8" r="3.3"/><circle cx="17.2" cy="10.2" r="3.3"/><circle cx="15.3" cy="16.2" r="3.3"/><circle cx="8.7" cy="16.2" r="3.3"/><circle cx="6.8" cy="10.2" r="3.3"/><circle cx="12" cy="12" r="2.2"/></g></svg>';
+
+  // Pegada de dinossauro (3 dedos) — diferente da pata de bicho (arredondada, 4 dedos) abaixo.
+  var CORNER_DINO = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><g fill="currentColor"><ellipse cx="12" cy="19" rx="2.6" ry="2.2"/><ellipse cx="12" cy="10.8" rx="2.1" ry="4.6"/><ellipse cx="7.3" cy="12.3" rx="1.9" ry="4.3" transform="rotate(-32 7.3 12.3)"/><ellipse cx="16.7" cy="12.3" rx="1.9" ry="4.3" transform="rotate(32 16.7 12.3)"/></g></svg>';
+
+  // Pegadinha de bichinho — pata com 4 dedos.
+  var CORNER_PAW = '<svg viewBox="0 0 24 24" class="frame-corner-svg"><g fill="currentColor"><ellipse cx="12" cy="15.5" rx="4.5" ry="4"/><circle cx="6.3" cy="9" r="2.1"/><circle cx="10.3" cy="6.3" r="2.1"/><circle cx="14.7" cy="6.3" r="2.1"/><circle cx="18" cy="9" r="2.1"/></g></svg>';
+
+  var FRAME_STYLES = [
+    { id: 'simples', label: 'Simples', cssClass: 'frame-simples', corner: null },
+    { id: 'arredondado', label: 'Arredondado', cssClass: 'frame-arredondado', corner: null }
+    // v2 — aguardando correção de renderização SVG
+    // { id: 'estrelas', label: 'Estrelas', cssClass: 'frame-estrelas', corner: CORNER_STAR },
+    // { id: 'folhas', label: 'Folhas', cssClass: 'frame-folhas', corner: CORNER_LEAF },
+    // { id: 'coracao', label: 'Coração', cssClass: 'frame-coracao', corner: CORNER_HEART },
+    // { id: 'planetas', label: 'Planetas', cssClass: 'frame-planetas', corner: CORNER_PLANET },
+    // { id: 'flor', label: 'Flor', cssClass: 'frame-flor', corner: CORNER_FLOWER },
+    // { id: 'dinossauros', label: 'Dinossauros', cssClass: 'frame-dinossauros', corner: CORNER_DINO },
+    // { id: 'bichos', label: 'Bichos', cssClass: 'frame-bichos', corner: CORNER_PAW }
+  ];
+
+  function getFrameStyle(id) {
+    var found = FRAME_STYLES.filter(function (f) { return f.id === id; })[0];
+    return found || FRAME_STYLES[0];
+  }
+
+  Guardiao.FrameStyles = {
+    list: FRAME_STYLES,
+    get: getFrameStyle
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/font-options.js
+ *
+ * Banco de fontes disponíveis para o título e para o texto de
+ * cada atividade. Só fontes de sistema (nenhuma depende de
+ * internet) — mínimo de 3 exigido, aqui com 4 opções.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var FONT_OPTIONS = [
+    { id: 'padrao', label: 'Padrão', family: "'Segoe UI', system-ui, sans-serif" },
+    { id: 'arredondada', label: 'Arredondada', family: "'Comic Sans MS', 'Comic Sans', cursive" },
+    { id: 'serifada', label: 'Serifada', family: "Georgia, 'Times New Roman', serif" },
+    { id: 'grande-clara', label: 'Grande e clara', family: "Verdana, Tahoma, sans-serif" }
+  ];
+
+  function getFontById(id) {
+    var found = FONT_OPTIONS.filter(function (f) { return f.id === id; })[0];
+    return found || FONT_OPTIONS[0];
+  }
+
+  Guardiao.FontOptions = { list: FONT_OPTIONS, get: getFontById };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/title-styles.js
+ *
+ * Variantes visuais do cabeçalho "GUARDIÃO [NOME]" — mínimo de 3
+ * exigido, aqui com 4. Cada uma é só uma classe CSS aplicada ao
+ * .panel-title (ver panel.css); "simples" não precisa de classe.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var TITLE_STYLES = [
+    { id: 'simples', label: 'Simples', cssClass: '' },
+    { id: 'faixa', label: 'Faixa colorida', cssClass: 'title-style-faixa' },
+    { id: 'contornado', label: 'Contornado', cssClass: 'title-style-contornado' },
+    { id: 'sombra', label: 'Sombra suave', cssClass: 'title-style-sombra' }
+  ];
+
+  function getTitleStyle(id) {
+    var found = TITLE_STYLES.filter(function (s) { return s.id === id; })[0];
+    return found || TITLE_STYLES[0];
+  }
+
+  Guardiao.TitleStyles = { list: TITLE_STYLES, get: getTitleStyle };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — data/color-swatches.js
+ *
+ * Paleta curta sugerida para a cor do texto de cada atividade
+ * (ver ui/text-style-picker.js). A mãe também pode escolher
+ * qualquer cor customizada via input type="color" no mesmo picker.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var COLOR_SWATCHES = [
+    '#2b2b2b', // padrão (cinza escuro)
+    '#c0392b', // vermelho
+    '#e07b39', // laranja
+    '#c9971e', // amarelo/dourado
+    '#2e7d32', // verde
+    '#1565c0', // azul
+    '#6a3fa0', // roxo
+    '#ad1457'  // rosa
+  ];
+
+  Guardiao.ColorSwatches = COLOR_SWATCHES;
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — core/state.js
+ *
+ * Fonte única de verdade do painel. Ninguém fora deste arquivo
+ * deve mutar o objeto de estado diretamente — sempre pelas
+ * funções expostas em Guardiao.State. Isso mantém render-*.js
+ * "burro" (só desenha o que o state manda) e prepara o terreno
+ * para, no futuro, trocar a persistência local por uma API sem
+ * tocar em nada de UI.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var STATE_VERSION = 1;
+  var MAX_ITEMS_PER_PERIOD = 10;
+  var PERIOD_KEYS = ['manha', 'tarde', 'noite'];
+
+  var PERIOD_LABELS = {
+    manha: 'Manhã',
+    tarde: 'Tarde',
+    noite: 'Noite'
+  };
+
+  function emptyPeriod() {
+    return { items: [], footerPhrase: '' };
+  }
+
+  /** Estado inicial de um painel novo, em branco. */
+  function createDefaultState() {
+    return {
+      version: STATE_VERSION,
+      meta: {
+        title: 'GUARDIÃO [NOME]',     // editável direto no cabeçalho do painel
+        titleFontFamily: 'padrao',    // id de Guardiao.FontOptions
+        titleStyle: 'simples',        // id de Guardiao.TitleStyles
+        titleFontSize: 22,            // pt
+        titleLetterSpacing: 0.5,      // px
+        accentColor: '#4F86C6',
+        frameStyle: 'simples',        // simples | arredondado | estrelas | folhas | ...
+        backgroundPattern: 'nenhum',  // nenhum | pontos | listras | ondas | ... | cor-solida | foto
+        backgroundImage: null,        // dataURL, usado quando backgroundPattern === 'foto'
+        backgroundSolidColor: '#FFF4E0', // usado quando backgroundPattern === 'cor-solida'
+        backgroundOpacity: 0.15,
+        mascot: null                  // { type: 'banco', id } | { type: 'upload', src }
+      },
+      periods: {
+        manha: emptyPeriod(),
+        tarde: emptyPeriod(),
+        noite: emptyPeriod()
+      },
+      observacoes: {
+        text: '',
+        fontFamily: null, // id de Guardiao.FontOptions; null = usa a fonte padrão do painel
+        textColor: null   // cor hex; null = usa a cor de texto padrão do painel
+      }
+    };
+  }
+
+  /** Cria um item de rotina em branco. */
+  function createRoutineItem() {
+    return {
+      id: Guardiao.Helpers.generateId('item'),
+      icon: null,       // { type: 'banco', id } | { type: 'upload', src }
+      text: '',
+      time: '',
+      fontFamily: null, // id de Guardiao.FontOptions; null = usa a fonte padrão do painel
+      textColor: null   // cor hex; null = usa a cor de texto padrão do painel
+    };
+  }
+
+  // --- estado em memória (módulo-privado) --------------------
+  var currentState = createDefaultState();
+  var listeners = [];
+
+  function getState() {
+    return currentState;
+  }
+
+  function replaceState(newState) {
+    currentState = newState;
+    notify();
+  }
+
+  /** Assina mudanças de estado. Retorna função para cancelar a assinatura. */
+  function subscribe(fn) {
+    listeners.push(fn);
+    return function unsubscribe() {
+      listeners = listeners.filter(function (l) { return l !== fn; });
+    };
+  }
+
+  function notify() {
+    listeners.forEach(function (fn) { fn(currentState); });
+  }
+
+  /** Atualização genérica e imutável de um caminho aninhado do meta. */
+  function updateMeta(patch) {
+    currentState = Object.assign({}, currentState, {
+      meta: Object.assign({}, currentState.meta, patch)
+    });
+    notify();
+  }
+
+  function updateObservacoes(text) {
+    // Object.assign (merge), não substituição: preserva fontFamily/textColor
+    // já escolhidos — trocar só o texto não pode apagar o estilo.
+    currentState = Object.assign({}, currentState, {
+      observacoes: Object.assign({}, currentState.observacoes, { text: text })
+    });
+    notify();
+  }
+
+  function updateObservacoesStyle(patch) {
+    currentState = Object.assign({}, currentState, {
+      observacoes: Object.assign({}, currentState.observacoes, patch)
+    });
+    notify();
+  }
+
+  function addItem(periodKey) {
+    var period = currentState.periods[periodKey];
+    if (!period || period.items.length >= MAX_ITEMS_PER_PERIOD) return null;
+    var item = createRoutineItem();
+    var newPeriod = Object.assign({}, period, { items: period.items.concat(item) });
+    currentState = Object.assign({}, currentState, {
+      periods: Object.assign({}, currentState.periods, buildPeriodPatch(periodKey, newPeriod))
+    });
+    notify();
+    return item.id;
+  }
+
+  function removeItem(periodKey, itemId) {
+    var period = currentState.periods[periodKey];
+    if (!period) return;
+    var newPeriod = Object.assign({}, period, {
+      items: period.items.filter(function (it) { return it.id !== itemId; })
+    });
+    currentState = Object.assign({}, currentState, {
+      periods: Object.assign({}, currentState.periods, buildPeriodPatch(periodKey, newPeriod))
+    });
+    notify();
+  }
+
+  function updateItem(periodKey, itemId, patch) {
+    var period = currentState.periods[periodKey];
+    if (!period) return;
+    var newItems = period.items.map(function (it) {
+      return it.id === itemId ? Object.assign({}, it, patch) : it;
+    });
+    var newPeriod = Object.assign({}, period, { items: newItems });
+    currentState = Object.assign({}, currentState, {
+      periods: Object.assign({}, currentState.periods, buildPeriodPatch(periodKey, newPeriod))
+    });
+    notify();
+  }
+
+  function reorderItem(periodKey, itemId, direction) {
+    var period = currentState.periods[periodKey];
+    if (!period) return;
+    var items = period.items.slice();
+    var idx = items.findIndex(function (it) { return it.id === itemId; });
+    var swapWith = idx + direction;
+    if (idx < 0 || swapWith < 0 || swapWith >= items.length) return;
+    var tmp = items[idx];
+    items[idx] = items[swapWith];
+    items[swapWith] = tmp;
+    var newPeriod = Object.assign({}, period, { items: items });
+    currentState = Object.assign({}, currentState, {
+      periods: Object.assign({}, currentState.periods, buildPeriodPatch(periodKey, newPeriod))
+    });
+    notify();
+  }
+
+  function updateFooterPhrase(periodKey, phrase) {
+    var period = currentState.periods[periodKey];
+    if (!period) return;
+    var newPeriod = Object.assign({}, period, { footerPhrase: phrase });
+    currentState = Object.assign({}, currentState, {
+      periods: Object.assign({}, currentState.periods, buildPeriodPatch(periodKey, newPeriod))
+    });
+    notify();
+  }
+
+  function buildPeriodPatch(periodKey, newPeriod) {
+    var patch = {};
+    patch[periodKey] = newPeriod;
+    return patch;
+  }
+
+  Guardiao.State = {
+    VERSION: STATE_VERSION,
+    MAX_ITEMS_PER_PERIOD: MAX_ITEMS_PER_PERIOD,
+    PERIOD_KEYS: PERIOD_KEYS,
+    PERIOD_LABELS: PERIOD_LABELS,
+    createDefaultState: createDefaultState,
+    createRoutineItem: createRoutineItem,
+    getState: getState,
+    replaceState: replaceState,
+    subscribe: subscribe,
+    updateMeta: updateMeta,
+    updateObservacoes: updateObservacoes,
+    updateObservacoesStyle: updateObservacoesStyle,
+    addItem: addItem,
+    removeItem: removeItem,
+    updateItem: updateItem,
+    reorderItem: reorderItem,
+    updateFooterPhrase: updateFooterPhrase
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — core/storage.js
+ *
+ * Único ponto de contato com persistência. Hoje é localStorage
+ * + export/import de arquivo JSON. No futuro, quando existir
+ * backend com autenticação, troca-se a implementação interna
+ * destas funções (loadState/saveState) por chamadas fetch — o
+ * resto da aplicação não muda, pois só conhece esta interface.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var STORAGE_KEY = 'guardiao-da-rotina:painel';
+
+  /** Lê o estado salvo no navegador. Retorna null se não houver nada ou se estiver corrompido. */
+  function loadState() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return migrateIfNeeded(parsed);
+    } catch (err) {
+      console.warn('Guardião da Rotina: não foi possível carregar o painel salvo.', err);
+      return null;
+    }
+  }
+
+  /** Salva o estado no navegador. Falha silenciosamente (ex.: quota estourada) mas avisa no console. */
+  function saveState(state) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (err) {
+      console.warn('Guardião da Rotina: não foi possível salvar o painel (armazenamento cheio?).', err);
+      return false;
+    }
+  }
+
+  function clearSavedState() {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (err) { /* ignora */ }
+  }
+
+  /** Gera o texto JSON para o botão "Exportar configuração". */
+  function serializeForExport(state) {
+    return JSON.stringify(state, null, 2);
+  }
+
+  /** Lê um arquivo JSON escolhido pela mãe (input file) e devolve o state validado. */
+  function importFromFile(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error('Não foi possível ler o arquivo.')); };
+      reader.onload = function () {
+        try {
+          var parsed = JSON.parse(reader.result);
+          resolve(migrateIfNeeded(parsed));
+        } catch (err) {
+          reject(new Error('Este arquivo não parece ser uma configuração válida do Guardião da Rotina.'));
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  /**
+   * Espaço reservado para migrações de versão do state ao longo do tempo.
+   * Hoje ainda é só a versão 1, mas o painel já ganhou campos novos em
+   * `meta` desde o primeiro export (ex.: titleFontSize) — um JSON salvo
+   * antes disso não os teria. Em vez de guardas espalhadas pelo código
+   * (`typeof x === 'number' ? ... : ...`), preenchemos aqui, uma vez só,
+   * qualquer campo de meta ausente com o padrão atual.
+   */
+  function migrateIfNeeded(state) {
+    if (!state || typeof state !== 'object') return null;
+    if (!state.version) state.version = Guardiao.State.VERSION;
+    var defaults = Guardiao.State.createDefaultState();
+    state.meta = Object.assign({}, defaults.meta, state.meta || {});
+    state.observacoes = Object.assign({}, defaults.observacoes, state.observacoes || {});
+    return state;
+  }
+
+  Guardiao.Storage = {
+    loadState: loadState,
+    saveState: saveState,
+    clearSavedState: clearSavedState,
+    serializeForExport: serializeForExport,
+    importFromFile: importFromFile
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/image-upload.js
+ *
+ * Fiação genérica de upload de imagem: liga um <input type="file">
+ * (normalmente invisível, disparado por um elemento clicável) a um
+ * callback que recebe a dataURL já redimensionada. Usado para
+ * mascote, fundo/foto e ícone customizado por item.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var Helpers = Guardiao.Helpers;
+
+  /**
+   * @param {HTMLElement} triggerEl - elemento em que um clique abre o seletor de arquivo.
+   * @param {Function} onImageReady - recebe (dataURL) quando a imagem for lida e redimensionada.
+   * @param {Object} [opts] - { maxDim, quality }
+   */
+  function wireImageUpload(triggerEl, onImageReady, opts) {
+    opts = opts || {};
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    triggerEl.addEventListener('click', function () {
+      input.value = '';
+      input.click();
+    });
+
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      Helpers.fileToResizedDataURL(file, opts.maxDim, opts.quality)
+        .then(onImageReady)
+        .catch(function (err) {
+          Guardiao.UI && Guardiao.UI.showToast
+            ? Guardiao.UI.showToast('Não foi possível usar essa imagem.')
+            : console.warn(err);
+        });
+    });
+
+    return input;
+  }
+
+  Guardiao.ImageUpload = { wire: wireImageUpload };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/mascot-bg-removal.js
+ *
+ * Remoção automática de fundo — SÓ para a imagem do mascote (a
+ * foto de fundo do painel continua manual, com controle de
+ * opacidade). Usa a biblioteca @imgly/background-removal.
+ *
+ * IMPORTANTE — a única exceção ao app ser 100% offline: essa
+ * biblioteca não é instalada localmente (o projeto não tem passo
+ * de build/empacotador), então é carregada sob demanda via CDN
+ * (import() dinâmico), só no instante em que a mãe clica em
+ * "Remover fundo automaticamente". Tudo o mais no app continua
+ * funcionando sem internet; só esse botão específico precisa de
+ * conexão (o navegador tende a cachear os arquivos entre usos).
+ *
+ * DUAS ORIGENS DIFERENTES, DE PROPÓSITO:
+ *  - O CÓDIGO da biblioteca (index.mjs) vem do jsdelivr (CDN_BASE).
+ *  - Os MODELOS (wasm/onnx, dezenas de MB) NÃO ficam junto no
+ *    jsdelivr — o resources.json de lá é só um placeholder vazio.
+ *    Eles são hospedados pela própria IMG.LY em staticimgly.com,
+ *    já versionados automaticamente pela biblioteca. Por isso NÃO
+ *    passamos `publicPath` na chamada abaixo: deixamos a biblioteca
+ *    usar o default dela mesma, que já aponta pro lugar certo — se
+ *    a sobrescrevêssemos apontando pro jsdelivr (erro cometido numa
+ *    versão anterior deste arquivo), ela procura os modelos onde
+ *    não existem e falha com "Resource ... not found".
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  // "@latest" evita fixar um número de versão que pode não existir mais no
+  // CDN no futuro. Se um dia a biblioteca mudar sua API e isso quebrar, troque
+  // por uma versão específica testada (ex.: "@1.7.0").
+  var CDN_BASE = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@latest/dist/';
+
+  var libraryPromise = null;
+  function loadLibrary() {
+    if (!libraryPromise) {
+      libraryPromise = import(CDN_BASE + 'index.mjs');
+    }
+    return libraryPromise;
+  }
+
+  function blobToDataURL(blob) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onerror = function () { reject(reader.error); };
+      reader.onload = function () { resolve(reader.result); };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  /**
+   * @param {string} dataURL - imagem original do mascote
+   * @returns {Promise<string>} dataURL PNG com fundo removido (transparente)
+   */
+  function removeBackground(dataURL) {
+    return loadLibrary()
+      .then(function (lib) {
+        // Sem segundo argumento de config: a biblioteca já sabe, sozinha, a
+        // URL correta (versionada) de onde buscar os modelos.
+        return lib.removeBackground(dataURL);
+      })
+      .then(blobToDataURL)
+      .catch(function (err) {
+        console.error('Guardião da Rotina: falha ao remover o fundo do mascote automaticamente.', err);
+        // Propaga um erro com a mensagem real (não genérica) pra quem chamou
+        // (icon-picker.js) poder mostrar na tela, sem precisar abrir o F12.
+        var reason = (err && err.message) ? err.message : String(err);
+        throw new Error(reason);
+      });
+  }
+
+  Guardiao.MascotBgRemoval = { removeBackground: removeBackground };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/icon-picker.js
+ *
+ * Modal reutilizável para escolher um ícone do banco (por
+ * categoria) ou enviar uma imagem própria. Usado tanto para o
+ * ícone de cada linha de rotina quanto para o mascote — a
+ * diferença entre os dois é só qual "banco" de opções é exibido.
+ *
+ * Quando aberto com `offerBgRemoval: true` (usado só pelo
+ * mascote — ver bindings.js), o upload não aplica direto: mostra
+ * antes uma telinha de confirmação com "usar original" ou
+ * "remover fundo automaticamente" (ui/mascot-bg-removal.js).
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var Helpers = Guardiao.Helpers;
+  var modalEl, titleEl, categoryTabsEl, gridEl, uploadTriggerEl;
+  var normalViewEl, confirmViewEl, confirmPreviewEl, confirmStatusEl;
+  var confirmOriginalBtn, confirmRemoveBgBtn, confirmCancelBtn;
+  var currentOnSelectBank = null;
+  var currentOnSelectUpload = null;
+  var currentOfferBgRemoval = false;
+  var pendingUploadDataURL = null;
+
+  function init() {
+    modalEl = el('div', 'modal-overlay');
+    modalEl.hidden = true;
+    modalEl.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-header">' +
+          '<h2 data-role="title">Escolher ícone</h2>' +
+          '<button type="button" class="modal-close" data-action="close-picker">✕</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<div data-role="normal-view">' +
+            '<div class="upload-dropzone" data-role="upload-trigger">📷 Enviar minha própria imagem</div>' +
+            '<div class="category-tabs" data-role="category-tabs" style="margin-top:12px;"></div>' +
+            '<div class="icon-grid" data-role="grid"></div>' +
+          '</div>' +
+          '<div data-role="confirm-view" hidden>' +
+            '<div class="upload-preview" style="margin-bottom:10px;">' +
+              '<img data-role="confirm-preview" alt="" style="width:64px;height:64px;">' +
+              '<p class="field-value-hint" data-role="confirm-status"></p>' +
+            '</div>' +
+            '<div class="btn-row">' +
+              '<button type="button" class="btn btn-sm" data-role="confirm-original">Usar imagem original</button>' +
+              '<button type="button" class="btn btn-sm btn-primary" data-role="confirm-remove-bg">🪄 Remover fundo automaticamente</button>' +
+            '</div>' +
+            '<p class="field-value-hint" style="margin-top:6px;">A remoção de fundo precisa de internet (só na hora de usar) e pode levar alguns segundos.</p>' +
+            '<button type="button" class="btn btn-sm" style="margin-top:6px;" data-role="confirm-cancel">← Voltar</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modalEl);
+
+    titleEl = modalEl.querySelector('[data-role="title"]');
+    categoryTabsEl = modalEl.querySelector('[data-role="category-tabs"]');
+    gridEl = modalEl.querySelector('[data-role="grid"]');
+    uploadTriggerEl = modalEl.querySelector('[data-role="upload-trigger"]');
+    normalViewEl = modalEl.querySelector('[data-role="normal-view"]');
+    confirmViewEl = modalEl.querySelector('[data-role="confirm-view"]');
+    confirmPreviewEl = modalEl.querySelector('[data-role="confirm-preview"]');
+    confirmStatusEl = modalEl.querySelector('[data-role="confirm-status"]');
+    confirmOriginalBtn = modalEl.querySelector('[data-role="confirm-original"]');
+    confirmRemoveBgBtn = modalEl.querySelector('[data-role="confirm-remove-bg"]');
+    confirmCancelBtn = modalEl.querySelector('[data-role="confirm-cancel"]');
+
+    modalEl.addEventListener('click', function (evt) {
+      if (evt.target === modalEl || evt.target.closest('[data-action="close-picker"]')) {
+        close();
+      }
+    });
+
+    // Upload compartilhado por ícone de item e mascote — resolução de 600px
+    // dá folga suficiente para a remoção de fundo funcionar bem no mascote,
+    // sem pesar demais no localStorage/JSON exportado para um ícone comum.
+    Guardiao.ImageUpload.wire(uploadTriggerEl, function (dataURL) {
+      if (currentOfferBgRemoval) {
+        showConfirmView(dataURL);
+      } else {
+        finishUpload(dataURL);
+      }
+    }, { maxDim: 600 });
+
+    confirmOriginalBtn.addEventListener('click', function () {
+      finishUpload(pendingUploadDataURL);
+    });
+
+    confirmRemoveBgBtn.addEventListener('click', function () {
+      confirmOriginalBtn.disabled = true;
+      confirmRemoveBgBtn.disabled = true;
+      confirmStatusEl.textContent = '⏳ Processando... (primeira vez pode demorar mais)';
+      Guardiao.MascotBgRemoval.removeBackground(pendingUploadDataURL)
+        .then(function (processedDataURL) {
+          finishUpload(processedDataURL);
+        })
+        .catch(function (err) {
+          console.error('Guardião da Rotina: falha ao remover o fundo automaticamente.', err);
+          var reason = (err && err.message) ? err.message : 'erro desconhecido';
+          confirmStatusEl.textContent = 'Não foi possível remover o fundo automaticamente (' + reason + '). Você pode usar a imagem original.';
+          confirmOriginalBtn.disabled = false;
+          confirmRemoveBgBtn.disabled = false;
+        });
+    });
+
+    confirmCancelBtn.addEventListener('click', function () {
+      pendingUploadDataURL = null;
+      showNormalView();
+    });
+  }
+
+  function showConfirmView(dataURL) {
+    pendingUploadDataURL = dataURL;
+    confirmPreviewEl.src = dataURL;
+    confirmStatusEl.textContent = '';
+    confirmOriginalBtn.disabled = false;
+    confirmRemoveBgBtn.disabled = false;
+    normalViewEl.hidden = true;
+    confirmViewEl.hidden = false;
+  }
+
+  function showNormalView() {
+    confirmViewEl.hidden = true;
+    normalViewEl.hidden = false;
+  }
+
+  function finishUpload(dataURL) {
+    if (currentOnSelectUpload) currentOnSelectUpload(dataURL);
+    close();
+  }
+
+  /**
+   * Abre o seletor.
+   * @param {Object} opts
+   *   title: string
+   *   categories: [{id,label,icons:[{id,label,svg}]}]  — categorias do banco de ícones
+   *   OR flatIcons: [{id,label,svg}]                    — lista simples (ex.: mascotes)
+   *   onSelectBank: function(id)
+   *   onSelectUpload: function(dataURL)
+   *   offerBgRemoval: boolean — mostra a etapa de "remover fundo automaticamente" após o upload (só mascote)
+   */
+  function open(opts) {
+    titleEl.textContent = opts.title || 'Escolher ícone';
+    currentOnSelectBank = opts.onSelectBank || null;
+    currentOnSelectUpload = opts.onSelectUpload || null;
+    currentOfferBgRemoval = !!opts.offerBgRemoval;
+    pendingUploadDataURL = null;
+    showNormalView();
+
+    var categories = opts.categories || [{ id: 'todos', label: 'Todos', icons: opts.flatIcons || [] }];
+    var activeCategory = categories[0].id;
+
+    function renderTabs() {
+      categoryTabsEl.innerHTML = '';
+      if (categories.length <= 1) return; // não mostra abas se só há uma "categoria"
+      categories.forEach(function (cat) {
+        var tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'category-tab' + (cat.id === activeCategory ? ' is-active' : '');
+        tab.textContent = cat.label;
+        tab.addEventListener('click', function () {
+          activeCategory = cat.id;
+          renderTabs();
+          renderGrid();
+        });
+        categoryTabsEl.appendChild(tab);
+      });
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = '';
+      var cat = categories.filter(function (c) { return c.id === activeCategory; })[0];
+      (cat ? cat.icons : []).forEach(function (icon) {
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'icon-grid-item';
+        item.innerHTML = icon.svg + '<span>' + Helpers.sanitizeText(icon.label) + '</span>';
+        item.addEventListener('click', function () {
+          if (currentOnSelectBank) currentOnSelectBank(icon.id);
+          close();
+        });
+        gridEl.appendChild(item);
+      });
+    }
+
+    renderTabs();
+    renderGrid();
+    modalEl.hidden = false;
+  }
+
+  function close() {
+    modalEl.hidden = true;
+    currentOnSelectBank = null;
+    currentOnSelectUpload = null;
+    currentOfferBgRemoval = false;
+    pendingUploadDataURL = null;
+    showNormalView();
+  }
+
+  function el(tag, className) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  Guardiao.IconPicker = { init: init, open: open, close: close };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/text-style-picker.js
+ *
+ * Modal para escolher a fonte e a cor do texto de UMA atividade
+ * específica. Diferente do icon-picker (que fecha ao selecionar,
+ * porque é uma escolha só), aqui a mãe pode trocar fonte e cor
+ * várias vezes antes de fechar — cada escolha aplica na hora.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var FontOptions = Guardiao.FontOptions;
+  var ColorSwatches = Guardiao.ColorSwatches;
+
+  var modalEl, titleEl, fontGridEl, swatchGridEl, customColorEl, resetBtnEl;
+  var currentOnFontChange = null;
+  var currentOnColorChange = null;
+  var currentOnReset = null;
+  var currentFontId = null;
+  var currentColor = null;
+
+  function init() {
+    modalEl = document.createElement('div');
+    modalEl.className = 'modal-overlay';
+    modalEl.hidden = true;
+    modalEl.innerHTML =
+      '<div class="modal-box">' +
+        '<div class="modal-header">' +
+          '<h2 data-role="title">Fonte e cor da atividade</h2>' +
+          '<button type="button" class="modal-close" data-action="close-style-picker">✕</button>' +
+        '</div>' +
+        '<div class="modal-body">' +
+          '<p class="field-value-hint">Fonte</p>' +
+          '<div class="font-option-grid" data-role="font-grid"></div>' +
+          '<p class="field-value-hint" style="margin-top:14px;">Cor do texto</p>' +
+          '<div class="color-swatch-grid" data-role="swatch-grid"></div>' +
+          '<div class="field-row" style="margin-top:8px;">' +
+            '<input type="color" data-role="custom-color">' +
+            '<span class="field-value-hint">Cor personalizada</span>' +
+          '</div>' +
+          '<button type="button" class="btn btn-sm" style="margin-top:14px;" data-role="reset-style">Restaurar padrão</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modalEl);
+
+    titleEl = modalEl.querySelector('[data-role="title"]');
+    fontGridEl = modalEl.querySelector('[data-role="font-grid"]');
+    swatchGridEl = modalEl.querySelector('[data-role="swatch-grid"]');
+    customColorEl = modalEl.querySelector('[data-role="custom-color"]');
+    resetBtnEl = modalEl.querySelector('[data-role="reset-style"]');
+
+    FontOptions.list.forEach(function (font) {
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'font-option-item';
+      item.style.fontFamily = font.family;
+      item.textContent = font.label;
+      item.setAttribute('data-font-id', font.id);
+      item.addEventListener('click', function () {
+        currentFontId = font.id;
+        syncSelection();
+        if (currentOnFontChange) currentOnFontChange(font.id);
+      });
+      fontGridEl.appendChild(item);
+    });
+
+    ColorSwatches.forEach(function (color) {
+      var swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'color-swatch';
+      swatch.style.background = color;
+      swatch.setAttribute('data-color', color);
+      swatch.addEventListener('click', function () {
+        currentColor = color;
+        syncSelection();
+        if (currentOnColorChange) currentOnColorChange(color);
+      });
+      swatchGridEl.appendChild(swatch);
+    });
+
+    customColorEl.addEventListener('input', function () {
+      currentColor = customColorEl.value;
+      syncSelection();
+      if (currentOnColorChange) currentOnColorChange(currentColor);
+    });
+
+    resetBtnEl.addEventListener('click', function () {
+      currentFontId = null;
+      currentColor = null;
+      syncSelection();
+      if (currentOnReset) currentOnReset();
+    });
+
+    modalEl.addEventListener('click', function (evt) {
+      if (evt.target === modalEl || evt.target.closest('[data-action="close-style-picker"]')) {
+        close();
+      }
+    });
+  }
+
+  function syncSelection() {
+    fontGridEl.querySelectorAll('.font-option-item').forEach(function (item) {
+      item.classList.toggle('is-selected', item.getAttribute('data-font-id') === currentFontId);
+    });
+    swatchGridEl.querySelectorAll('.color-swatch').forEach(function (swatch) {
+      swatch.classList.toggle('is-selected', swatch.getAttribute('data-color') === currentColor);
+    });
+  }
+
+  /**
+   * @param {Object} opts
+   *   title: string (opcional, default "Fonte e cor da atividade")
+   *   currentFontId: string|null, currentColor: string|null
+   *   onFontChange(id), onColorChange(hex), onReset()
+   */
+  function open(opts) {
+    titleEl.textContent = opts.title || 'Fonte e cor da atividade';
+    currentFontId = opts.currentFontId || null;
+    currentColor = opts.currentColor || null;
+    currentOnFontChange = opts.onFontChange || null;
+    currentOnColorChange = opts.onColorChange || null;
+    currentOnReset = opts.onReset || null;
+    customColorEl.value = currentColor || '#2b2b2b';
+    syncSelection();
+    modalEl.hidden = false;
+  }
+
+  function close() {
+    modalEl.hidden = true;
+  }
+
+  Guardiao.TextStylePicker = { init: init, open: open, close: close };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/render-panel.js
+ *
+ * Responsabilidade única: transformar `state` em DOM do painel
+ * (a folha A4). Não escuta eventos, não muta state — é chamado
+ * explicitamente por bindings.js sempre que algo estrutural muda
+ * (adicionar/remover item, trocar ícone, moldura, cor, fundo,
+ * mascote). Edição de texto livre (título, descrição do item,
+ * horário, frase de rodapé, observações) é feita direto nos
+ * elementos já renderizados, via delegação de eventos em
+ * bindings.js — por isso este arquivo NÃO precisa ser chamado a
+ * cada tecla digitada.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var Helpers = Guardiao.Helpers;
+  var IconBank = Guardiao.IconBank;
+  var MascotBank = Guardiao.MascotBank;
+  var FrameStyles = Guardiao.FrameStyles;
+  var FontOptions = Guardiao.FontOptions;
+  var TitleStyles = Guardiao.TitleStyles;
+
+  /** Renderiza o painel inteiro dentro de `container` (substitui o conteúdo). */
+  function renderPanel(state, container) {
+    container.innerHTML = '';
+    container.appendChild(buildPanelRoot(state));
+  }
+
+  function buildPanelRoot(state) {
+    var meta = state.meta;
+    var panel = el('div', 'panel');
+    panel.style.setProperty('--accent', meta.accentColor);
+
+    panel.appendChild(buildBackgroundLayer(meta));
+    panel.appendChild(buildHeader(meta));
+
+    var columns = el('div', 'panel-columns');
+    Guardiao.State.PERIOD_KEYS.forEach(function (periodKey) {
+      columns.appendChild(buildPeriodColumn(periodKey, state.periods[periodKey], meta));
+    });
+    columns.appendChild(buildObservacoesColumn(state.observacoes));
+    panel.appendChild(columns);
+
+    return panel;
+  }
+
+  // Padrões de fundo "de forma" — reaproveitam os mesmos enfeites SVG das
+  // molduras (coração, planetas, flor, dinossauros, bichos) em vez de ter um
+  // desenho duplicado só pra isso. Os outros padrões (pontos/listras/ondas)
+  // continuam resolvidos em CSS puro (ver panel.css, bg-pontos etc.).
+  var SHAPE_BACKGROUND_IDS = ['coracao', 'planetas', 'flor', 'dinossauros', 'bichos'];
+
+  function buildBackgroundLayer(meta) {
+    var bg = el('div', 'panel-background');
+    if (meta.backgroundPattern === 'foto' && meta.backgroundImage) {
+      bg.classList.add('bg-foto');
+      bg.style.backgroundImage = 'url(' + meta.backgroundImage + ')';
+      bg.style.opacity = String(meta.backgroundOpacity);
+    } else if (meta.backgroundPattern === 'cor-solida') {
+      // Sem imagem, sem padrão — só a cor sólida escolhida, com a mesma
+      // opacidade das outras opções de fundo.
+      bg.style.backgroundColor = meta.backgroundSolidColor;
+      bg.style.opacity = String(meta.backgroundOpacity);
+    } else if (SHAPE_BACKGROUND_IDS.indexOf(meta.backgroundPattern) !== -1) {
+      applyShapeBackground(bg, meta);
+    } else if (meta.backgroundPattern && meta.backgroundPattern !== 'nenhum') {
+      bg.classList.add('bg-' + meta.backgroundPattern);
+      bg.style.opacity = String(meta.backgroundOpacity);
+    }
+    return bg;
+  }
+
+  function applyShapeBackground(bg, meta) {
+    var frame = FrameStyles.get(meta.backgroundPattern);
+    if (!frame.corner) return;
+    // Os enfeites de moldura usam currentColor (herdado via CSS) — mas dentro
+    // de uma data URI de background-image não há herança de CSS, então
+    // trocamos currentColor pela cor de destaque de verdade antes de codificar.
+    var tinted = frame.corner.replace(/currentColor/g, meta.accentColor);
+    bg.style.backgroundImage = 'url("data:image/svg+xml,' + encodeURIComponent(tinted) + '")';
+    bg.style.backgroundSize = '10mm 10mm';
+    bg.style.backgroundRepeat = 'repeat';
+    bg.style.opacity = String(meta.backgroundOpacity);
+  }
+
+  function buildHeader(meta) {
+    var header = el('div', 'panel-header');
+
+    var mascotBox = el('div', 'panel-mascot' + (meta.mascot ? '' : ' is-empty'));
+    mascotBox.setAttribute('data-action', 'pick-mascot');
+    mascotBox.title = 'Clique para escolher o mascote';
+    mascotBox.innerHTML = renderMascotMarkup(meta.mascot);
+    header.appendChild(mascotBox);
+
+    var titleStyle = TitleStyles.get(meta.titleStyle);
+    var title = document.createElement('input');
+    title.type = 'text';
+    title.className = 'panel-title' + (titleStyle.cssClass ? ' ' + titleStyle.cssClass : '');
+    title.style.fontFamily = FontOptions.get(meta.titleFontFamily).family;
+    if (typeof meta.titleFontSize === 'number') title.style.fontSize = meta.titleFontSize + 'pt';
+    if (typeof meta.titleLetterSpacing === 'number') title.style.letterSpacing = meta.titleLetterSpacing + 'px';
+    title.setAttribute('data-field', 'title');
+    title.value = meta.title;
+    title.placeholder = 'GUARDIÃO [NOME]';
+    header.appendChild(title);
+
+    // Espaçador para manter o título centralizado mesmo com o mascote de um lado só.
+    header.appendChild(el('div', 'panel-mascot-spacer'));
+
+    return header;
+  }
+
+  function buildPeriodColumn(periodKey, period, meta) {
+    var col = el('div', 'panel-column');
+    col.setAttribute('data-period', periodKey);
+
+    var title = el('div', 'panel-column-title');
+    title.textContent = Guardiao.State.PERIOD_LABELS[periodKey];
+    col.appendChild(title);
+
+    var itemsWrap = el('div', 'panel-items');
+    period.items.forEach(function (item) {
+      itemsWrap.appendChild(buildItemCard(periodKey, item, meta));
+    });
+    col.appendChild(itemsWrap);
+
+    var addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'panel-add-item';
+    addBtn.setAttribute('data-action', 'add-item');
+    addBtn.setAttribute('data-period', periodKey);
+    var atMax = period.items.length >= Guardiao.State.MAX_ITEMS_PER_PERIOD;
+    addBtn.disabled = atMax;
+    addBtn.textContent = atMax ? 'Máximo de 10 itens' : '+ adicionar linha';
+    col.appendChild(addBtn);
+
+    var footer = el('div', 'panel-column-footer');
+    var phrase = document.createElement('textarea');
+    phrase.className = 'panel-footer-phrase';
+    phrase.rows = 2;
+    phrase.setAttribute('data-field', 'footerPhrase');
+    phrase.setAttribute('data-period', periodKey);
+    phrase.placeholder = 'Frase para este período...';
+    phrase.value = period.footerPhrase || '';
+    footer.appendChild(phrase);
+
+    var suggest = document.createElement('button');
+    suggest.type = 'button';
+    suggest.className = 'panel-suggest-phrase';
+    suggest.setAttribute('data-action', 'suggest-phrase');
+    suggest.setAttribute('data-period', periodKey);
+    suggest.title = 'Sugerir uma frase';
+    suggest.textContent = '🎲 sugerir frase';
+    footer.appendChild(suggest);
+
+    col.appendChild(footer);
+
+    return col;
+  }
+
+  function buildItemCard(periodKey, item, meta) {
+    var frame = FrameStyles.get(meta.frameStyle);
+    var card = el('div', 'panel-item ' + frame.cssClass);
+    card.setAttribute('data-period', periodKey);
+    card.setAttribute('data-item-id', item.id);
+
+    if (frame.corner) {
+      card.appendChild(buildFrameCorners(frame.corner));
+    }
+
+    var iconBox = el('div', 'panel-item-icon');
+    iconBox.setAttribute('data-action', 'pick-icon');
+    iconBox.setAttribute('data-period', periodKey);
+    iconBox.setAttribute('data-item-id', item.id);
+    iconBox.title = 'Clique para escolher um ícone';
+    iconBox.innerHTML = renderIconMarkup(item.icon);
+    card.appendChild(iconBox);
+
+    // Hora vem ANTES do texto na atividade (campo opcional, texto livre).
+    var time = document.createElement('input');
+    time.type = 'text';
+    time.className = 'panel-item-time';
+    time.setAttribute('data-field', 'time');
+    time.setAttribute('data-period', periodKey);
+    time.setAttribute('data-item-id', item.id);
+    time.placeholder = '🕐';
+    time.title = 'Horário opcional (ex.: 08:00, ou "manhã toda")';
+    time.value = item.time || '';
+    card.appendChild(time);
+
+    var text = document.createElement('textarea');
+    text.className = 'panel-item-text';
+    text.rows = 1;
+    text.setAttribute('data-field', 'text');
+    text.setAttribute('data-period', periodKey);
+    text.setAttribute('data-item-id', item.id);
+    text.placeholder = 'Descreva a atividade...';
+    text.value = item.text || '';
+    if (item.fontFamily) text.style.fontFamily = FontOptions.get(item.fontFamily).family;
+    if (item.textColor) text.style.color = item.textColor;
+    card.appendChild(text);
+
+    var styleBtn = document.createElement('button');
+    styleBtn.type = 'button';
+    styleBtn.className = 'panel-item-style-btn';
+    styleBtn.setAttribute('data-action', 'edit-item-style');
+    styleBtn.setAttribute('data-period', periodKey);
+    styleBtn.setAttribute('data-item-id', item.id);
+    styleBtn.title = 'Fonte e cor desta atividade';
+    styleBtn.textContent = 'Aa';
+    card.appendChild(styleBtn);
+
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'panel-item-remove';
+    remove.setAttribute('data-action', 'remove-item');
+    remove.setAttribute('data-period', periodKey);
+    remove.setAttribute('data-item-id', item.id);
+    remove.title = 'Remover esta linha';
+    remove.textContent = '✕';
+    card.appendChild(remove);
+
+    return card;
+  }
+
+  function buildFrameCorners(cornerSvg) {
+    var wrap = el('div', 'frame-corner-wrap');
+    ['tl', 'tr', 'bl', 'br'].forEach(function (pos) {
+      var corner = el('span', 'frame-corner ' + pos);
+      corner.innerHTML = cornerSvg;
+      wrap.appendChild(corner);
+    });
+    return wrap;
+  }
+
+  function buildObservacoesColumn(observacoes) {
+    var col = el('div', 'panel-column observacoes');
+    col.setAttribute('data-period', 'observacoes');
+
+    var title = el('div', 'panel-column-title');
+    title.textContent = 'Observações';
+    col.appendChild(title);
+
+    var styleBtn = document.createElement('button');
+    styleBtn.type = 'button';
+    styleBtn.className = 'panel-item-style-btn panel-observacoes-style-btn';
+    styleBtn.setAttribute('data-action', 'edit-observacoes-style');
+    styleBtn.title = 'Fonte e cor das observações';
+    styleBtn.textContent = 'Aa';
+    col.appendChild(styleBtn);
+
+    var text = document.createElement('textarea');
+    text.className = 'panel-observacoes-text';
+    text.setAttribute('data-field', 'observacoes');
+    text.placeholder = 'Anotações, lembretes, combinados especiais...';
+    text.value = observacoes.text || '';
+    if (observacoes.fontFamily) text.style.fontFamily = FontOptions.get(observacoes.fontFamily).family;
+    if (observacoes.textColor) text.style.color = observacoes.textColor;
+    col.appendChild(text);
+
+    return col;
+  }
+
+  function renderIconMarkup(iconRef) {
+    if (!iconRef) return '';
+    if (iconRef.type === 'banco') {
+      var icon = IconBank.getById(iconRef.id);
+      return icon ? icon.svg : '';
+    }
+    if (iconRef.type === 'upload' && iconRef.src) {
+      return '<img src="' + iconRef.src + '" alt="">';
+    }
+    return '';
+  }
+
+  function renderMascotMarkup(mascot) {
+    if (!mascot) return '';
+    if (mascot.type === 'banco') {
+      var found = MascotBank.filter(function (m) { return m.id === mascot.id; })[0];
+      return found ? found.svg : '';
+    }
+    if (mascot.type === 'upload' && mascot.src) {
+      return '<img src="' + mascot.src + '" alt="">';
+    }
+    return '';
+  }
+
+  function el(tag, className) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  Guardiao.RenderPanel = {
+    renderPanel: renderPanel,
+    renderIconMarkup: renderIconMarkup,
+    renderMascotMarkup: renderMascotMarkup
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/render-editor.js
+ *
+ * A estrutura da barra lateral é estática (definida em index.html)
+ * — os controles nunca são recriados, só os valores são
+ * sincronizados a partir do state. Isso evita perder foco/seleção
+ * do usuário enquanto ele mexe nos campos, e mantém geração de
+ * chips (moldura / padrão de fundo) dirigida pelos dados de
+ * frame-styles.js em vez de hardcoded no HTML.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var FrameStyles = Guardiao.FrameStyles;
+  var TitleStyles = Guardiao.TitleStyles;
+  var FontOptions = Guardiao.FontOptions;
+
+  // As 5 opções "de forma" (coração...bichos) reaproveitam os mesmos enfeites
+  // SVG das molduras (Guardiao.FrameStyles) — ver buildBackgroundLayer em
+  // render-panel.js, que os usa como um padrão repetido tingido com a cor de
+  // destaque, em vez de corner decoration. "Foto" continua por último.
+  var BACKGROUND_PATTERNS = [
+    { id: 'nenhum', label: 'Nenhum' },
+    { id: 'pontos', label: 'Pontos' },
+    { id: 'listras', label: 'Listras' },
+    { id: 'ondas', label: 'Ondas' },
+    // v2 — aguardando correção de renderização SVG
+    // { id: 'coracao', label: 'Coração' },
+    // { id: 'planetas', label: 'Planetas' },
+    // { id: 'flor', label: 'Flor' },
+    // { id: 'dinossauros', label: 'Dinossauros' },
+    // { id: 'bichos', label: 'Bichos' },
+    { id: 'cor-solida', label: 'Cor sólida' },
+    { id: 'foto', label: 'Foto' }
+  ];
+
+  /** Constrói as opções de moldura/fundo (dropdown) e de estilo de título (chips). */
+  function buildStaticChoices() {
+    // Moldura e padrão de fundo viraram <select> — muitas opções (9 molduras) num
+    // grid de chips poluiria a barra lateral, um dropdown fica compacto.
+    buildSelectOptions('[data-role="frame-style-select"]', FrameStyles.list);
+    buildSelectOptions('[data-role="background-pattern-select"]', BACKGROUND_PATTERNS);
+
+    var titleStyleGrid = document.querySelector('[data-role="title-style-grid"]');
+    if (titleStyleGrid) {
+      titleStyleGrid.innerHTML = '';
+      TitleStyles.list.forEach(function (s) {
+        titleStyleGrid.appendChild(buildChip(s.id, s.label, 'title-style'));
+      });
+    }
+
+    // Selects de fonte (título e, futuramente, outros usos) — as mesmas opções
+    // de Guardiao.FontOptions, cada uma já pré-visualizada na própria fonte.
+    document.querySelectorAll('[data-role="font-select"]').forEach(function (select) {
+      select.innerHTML = '';
+      FontOptions.list.forEach(function (font) {
+        var opt = document.createElement('option');
+        opt.value = font.id;
+        opt.textContent = font.label;
+        opt.style.fontFamily = font.family;
+        select.appendChild(opt);
+      });
+    });
+  }
+
+  /** Preenche um <select> com {id,label} — usado por moldura e padrão de fundo. */
+  function buildSelectOptions(selector, options) {
+    var select = document.querySelector(selector);
+    if (!select) {
+      console.error('Guardião da Rotina: elemento "' + selector + '" não existe no HTML. index.html e os arquivos .js podem estar dessincronizados — force um recarregamento sem cache (Ctrl+Shift+R).');
+      return;
+    }
+    if (!Array.isArray(options) || options.length === 0) {
+      // Isso normalmente indica que o navegador carregou uma versão em cache e
+      // desatualizada de um data/*.js — force um recarregamento sem cache
+      // (Ctrl+Shift+R) e recarregue a página antes de investigar mais.
+      console.error('Guardião da Rotina: lista de opções vazia/inválida para "' + selector + '".', options);
+      return;
+    }
+    select.innerHTML = '';
+    options.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.value = o.id;
+      opt.textContent = o.label;
+      select.appendChild(opt);
+    });
+  }
+
+  function buildChip(value, label, groupName) {
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip-option';
+    chip.textContent = label;
+    chip.setAttribute('data-action', groupName);
+    chip.setAttribute('data-value', value);
+    return chip;
+  }
+
+  /** Reflete o state atual nos controles da barra lateral. Chamado após qualquer mudança de state. */
+  function syncEditorControls(state) {
+    var meta = state.meta;
+
+    setValue('[data-field-meta="accentColor"]', meta.accentColor);
+    setValue('[data-field-meta="backgroundOpacity"]', meta.backgroundOpacity);
+
+    setValue('[data-field-meta="frameStyle"]', meta.frameStyle);
+    setValue('[data-field-meta="backgroundPattern"]', meta.backgroundPattern);
+    setChipSelection('[data-action="title-style"]', meta.titleStyle);
+    setValue('[data-field-meta="titleFontFamily"]', meta.titleFontFamily);
+
+    var titleSizeLabel = document.querySelector('[data-role="title-font-size-value"]');
+    if (titleSizeLabel) titleSizeLabel.textContent = meta.titleFontSize + 'pt';
+    var titleSpacingLabel = document.querySelector('[data-role="title-letter-spacing-value"]');
+    if (titleSpacingLabel) titleSpacingLabel.textContent = meta.titleLetterSpacing + 'px';
+
+    var photoRow = document.querySelector('[data-role="background-photo-row"]');
+    if (photoRow) photoRow.hidden = meta.backgroundPattern !== 'foto';
+
+    var solidColorRow = document.querySelector('[data-role="background-color-row"]');
+    if (solidColorRow) solidColorRow.hidden = meta.backgroundPattern !== 'cor-solida';
+    setValue('[data-field-meta="backgroundSolidColor"]', meta.backgroundSolidColor);
+
+    var opacityRow = document.querySelector('[data-role="background-opacity-row"]');
+    if (opacityRow) {
+      opacityRow.hidden = meta.backgroundPattern === 'nenhum';
+    }
+
+    syncPreviewThumb('[data-role="mascot-preview"]', Guardiao.RenderPanel.renderMascotMarkup(meta.mascot), '🧸 Escolher mascote');
+
+    // Contadores de itens por período (usados para desabilitar "adicionar" na aba ativa, se necessário).
+    Guardiao.State.PERIOD_KEYS.forEach(function (key) {
+      var counter = document.querySelector('[data-role="item-count-' + key + '"]');
+      if (counter) {
+        counter.textContent = state.periods[key].items.length + '/' + Guardiao.State.MAX_ITEMS_PER_PERIOD;
+      }
+    });
+  }
+
+  function syncPreviewThumb(selector, markup, emptyLabel) {
+    var box = document.querySelector(selector);
+    if (!box) return;
+    box.innerHTML = markup || ('<span class="field-value-hint">' + emptyLabel + '</span>');
+  }
+
+  function setValue(selector, value) {
+    var elNode = document.querySelector(selector);
+    if (elNode) elNode.value = value;
+  }
+
+  function setChipSelection(selector, activeValue) {
+    document.querySelectorAll(selector).forEach(function (chip) {
+      chip.classList.toggle('is-selected', chip.getAttribute('data-value') === activeValue);
+    });
+  }
+
+  Guardiao.RenderEditor = {
+    buildStaticChoices: buildStaticChoices,
+    syncEditorControls: syncEditorControls
+  };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — ui/bindings.js
+ *
+ * Única camada que liga eventos do DOM ao state e decide quando
+ * um "re-render estrutural" é necessário. Regra geral:
+ *   - Campos de texto livre (título, descrição, horário, frase de
+ *     rodapé, observações) mudam o state SEM re-renderizar — eles
+ *     já são a própria UI, re-renderizar destruiria o foco/cursor.
+ *   - Cor de destaque e opacidade de fundo mudam o state e também
+ *     aplicam o efeito direto via CSS var/estilo (sem rebuild).
+ *   - Tudo o mais (adicionar/remover linha, trocar ícone, mascote,
+ *     moldura, padrão de fundo, foto de fundo, importar JSON) é
+ *     estrutural: dispara Guardiao.RenderPanel.renderPanel() de novo.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  var State = Guardiao.State;
+  var Storage = Guardiao.Storage;
+  var Helpers = Guardiao.Helpers;
+  var RenderPanel = Guardiao.RenderPanel;
+  var RenderEditor = Guardiao.RenderEditor;
+  var IconBank = Guardiao.IconBank;
+  var MascotBank = Guardiao.MascotBank;
+
+  var panelContainer;
+  var saveDebounced = Helpers.debounce(function () {
+    Storage.saveState(State.getState());
+  }, 600);
+
+  // --- Toast simples (avisos curtos, ex.: "máximo de itens atingido") ----
+  var toastEl;
+  function showToast(message) {
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'toast';
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = message;
+    toastEl.classList.add('is-visible');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(function () {
+      toastEl.classList.remove('is-visible');
+    }, 2400);
+  }
+  Guardiao.UI = { showToast: showToast };
+
+  // --- Render orquestrado -------------------------------------------------
+  function fullRender() {
+    var state = State.getState();
+    RenderPanel.renderPanel(state, panelContainer);
+    RenderEditor.syncEditorControls(state);
+    panelContainer.querySelectorAll('textarea').forEach(autoGrow);
+    markOverflowingColumns();
+    saveDebounced();
+  }
+
+  /**
+   * A folha impressa tem altura fixa — o que não couber numa coluna é
+   * cortado (ver print.css). Aqui, na tela, avisamos visualmente quando
+   * isso está para acontecer, para a mãe enxugar o texto antes de imprimir.
+   */
+  function markOverflowingColumns() {
+    panelContainer.querySelectorAll('.panel-items, .panel-observacoes-text').forEach(function (el) {
+      el.classList.toggle('is-overflowing', el.scrollHeight > el.clientHeight + 1);
+    });
+  }
+
+  function autoGrow(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  // --- Delegação de eventos dentro do painel ------------------------------
+  function bindPanelEvents() {
+    panelContainer.addEventListener('input', function (evt) {
+      var target = evt.target;
+      var field = target.getAttribute('data-field');
+      if (!field) return;
+
+      var period = target.getAttribute('data-period');
+      var itemId = target.getAttribute('data-item-id');
+
+      if (field === 'title') {
+        State.updateMeta({ title: target.value });
+      } else if (field === 'observacoes') {
+        State.updateObservacoes(target.value);
+      } else if (field === 'footerPhrase') {
+        State.updateFooterPhrase(period, target.value);
+      } else if (field === 'text' || field === 'time') {
+        var patch = {};
+        patch[field] = target.value;
+        State.updateItem(period, itemId, patch);
+      }
+
+      if (target.tagName === 'TEXTAREA') autoGrow(target);
+      saveDebounced();
+    });
+
+    panelContainer.addEventListener('click', function (evt) {
+      var addBtn = evt.target.closest('[data-action="add-item"]');
+      var removeBtn = evt.target.closest('[data-action="remove-item"]');
+      var iconBtn = evt.target.closest('[data-action="pick-icon"]');
+      var mascotBtn = evt.target.closest('[data-action="pick-mascot"]');
+      var suggestBtn = evt.target.closest('[data-action="suggest-phrase"]');
+      var styleBtn = evt.target.closest('[data-action="edit-item-style"]');
+      var obsStyleBtn = evt.target.closest('[data-action="edit-observacoes-style"]');
+
+      if (addBtn) {
+        var period = addBtn.getAttribute('data-period');
+        var newId = State.addItem(period);
+        if (!newId) {
+          showToast('Máximo de 10 linhas por período.');
+        } else {
+          fullRender();
+          focusItemText(period, newId);
+        }
+      } else if (removeBtn) {
+        State.removeItem(removeBtn.getAttribute('data-period'), removeBtn.getAttribute('data-item-id'));
+        fullRender();
+      } else if (iconBtn) {
+        openIconPickerForItem(iconBtn.getAttribute('data-period'), iconBtn.getAttribute('data-item-id'));
+      } else if (mascotBtn) {
+        openMascotPicker();
+      } else if (suggestBtn) {
+        suggestFooterPhrase(suggestBtn.getAttribute('data-period'));
+      } else if (styleBtn) {
+        openTextStylePickerForItem(styleBtn.getAttribute('data-period'), styleBtn.getAttribute('data-item-id'));
+      } else if (obsStyleBtn) {
+        openTextStylePickerForObservacoes();
+      }
+    });
+  }
+
+  function openTextStylePickerForObservacoes() {
+    var observacoes = State.getState().observacoes;
+    Guardiao.TextStylePicker.open({
+      title: 'Fonte e cor das observações',
+      currentFontId: observacoes.fontFamily,
+      currentColor: observacoes.textColor,
+      onFontChange: function (fontId) {
+        State.updateObservacoesStyle({ fontFamily: fontId });
+        fullRender();
+      },
+      onColorChange: function (color) {
+        State.updateObservacoesStyle({ textColor: color });
+        fullRender();
+      },
+      onReset: function () {
+        State.updateObservacoesStyle({ fontFamily: null, textColor: null });
+        fullRender();
+      }
+    });
+  }
+
+  function openTextStylePickerForItem(period, itemId) {
+    var item = State.getState().periods[period].items.filter(function (it) { return it.id === itemId; })[0];
+    if (!item) return;
+    Guardiao.TextStylePicker.open({
+      currentFontId: item.fontFamily,
+      currentColor: item.textColor,
+      onFontChange: function (fontId) {
+        State.updateItem(period, itemId, { fontFamily: fontId });
+        fullRender();
+      },
+      onColorChange: function (color) {
+        State.updateItem(period, itemId, { textColor: color });
+        fullRender();
+      },
+      onReset: function () {
+        State.updateItem(period, itemId, { fontFamily: null, textColor: null });
+        fullRender();
+      }
+    });
+  }
+
+  function suggestFooterPhrase(period) {
+    var options = (Guardiao.PhrasesBank && Guardiao.PhrasesBank[period]) || [];
+    if (!options.length) return;
+    var current = State.getState().periods[period].footerPhrase;
+    var choices = options.filter(function (p) { return p !== current; });
+    if (!choices.length) choices = options;
+    var pick = choices[Math.floor(Math.random() * choices.length)];
+    State.updateFooterPhrase(period, pick);
+    var field = panelContainer.querySelector('.panel-footer-phrase[data-period="' + period + '"]');
+    if (field) {
+      field.value = pick;
+      autoGrow(field);
+    }
+    saveDebounced();
+  }
+
+  function focusItemText(period, itemId) {
+    var selector = '.panel-item-text[data-period="' + period + '"][data-item-id="' + itemId + '"]';
+    var field = panelContainer.querySelector(selector);
+    if (field) field.focus();
+  }
+
+  function openIconPickerForItem(period, itemId) {
+    Guardiao.IconPicker.open({
+      title: 'Escolher ícone da atividade',
+      categories: IconBank.categories,
+      onSelectBank: function (iconId) {
+        State.updateItem(period, itemId, { icon: { type: 'banco', id: iconId } });
+        fullRender();
+      },
+      onSelectUpload: function (dataURL) {
+        State.updateItem(period, itemId, { icon: { type: 'upload', src: dataURL } });
+        fullRender();
+      }
+    });
+  }
+
+  function openMascotPicker() {
+    Guardiao.IconPicker.open({
+      title: 'Escolher mascote',
+      flatIcons: MascotBank,
+      offerBgRemoval: true, // só o mascote oferece remover fundo automaticamente
+      onSelectBank: function (mascotId) {
+        State.updateMeta({ mascot: { type: 'banco', id: mascotId } });
+        fullRender();
+      },
+      onSelectUpload: function (dataURL) {
+        State.updateMeta({ mascot: { type: 'upload', src: dataURL } });
+        fullRender();
+      }
+    });
+  }
+
+  // --- Controles estáticos da barra lateral -------------------------------
+  function bindSidebarEvents() {
+    var accentInput = document.querySelector('[data-field-meta="accentColor"]');
+    if (accentInput) {
+      accentInput.addEventListener('input', function () {
+        State.updateMeta({ accentColor: accentInput.value });
+        var panelEl = panelContainer.querySelector('.panel');
+        if (panelEl) panelEl.style.setProperty('--accent', accentInput.value);
+        saveDebounced();
+      });
+    }
+
+    var solidColorInput = document.querySelector('[data-field-meta="backgroundSolidColor"]');
+    if (solidColorInput) {
+      solidColorInput.addEventListener('input', function () {
+        State.updateMeta({ backgroundSolidColor: solidColorInput.value });
+        var bgEl = panelContainer.querySelector('.panel-background');
+        if (bgEl) bgEl.style.backgroundColor = solidColorInput.value;
+        saveDebounced();
+      });
+    }
+
+    var opacityInput = document.querySelector('[data-field-meta="backgroundOpacity"]');
+    if (opacityInput) {
+      opacityInput.addEventListener('input', function () {
+        var value = parseFloat(opacityInput.value);
+        State.updateMeta({ backgroundOpacity: value });
+        var bgEl = panelContainer.querySelector('.panel-background');
+        if (bgEl) bgEl.style.opacity = String(value);
+        saveDebounced();
+      });
+    }
+
+    // Estilo do título continua em chips (só 4 opções); moldura e padrão de
+    // fundo viraram <select> (bindMetaSelect, abaixo) para não poluir a UI.
+    document.addEventListener('click', function (evt) {
+      var titleStyleChip = evt.target.closest('[data-action="title-style"]');
+      if (titleStyleChip) {
+        State.updateMeta({ titleStyle: titleStyleChip.getAttribute('data-value') });
+        fullRender();
+      }
+    });
+
+    bindMetaSelect('titleFontFamily');
+    bindMetaSelect('frameStyle');
+    bindMetaSelect('backgroundPattern');
+    bindTitleSteppers();
+
+    var bgPhotoTrigger = document.querySelector('[data-action="upload-background-photo"]');
+    if (bgPhotoTrigger) {
+      Guardiao.ImageUpload.wire(bgPhotoTrigger, function (dataURL) {
+        State.updateMeta({ backgroundImage: dataURL, backgroundPattern: 'foto' });
+        fullRender();
+      }, { maxDim: 1600, quality: 0.8 });
+    }
+
+    var mascotPreview = document.querySelector('[data-role="mascot-preview"]');
+    if (mascotPreview) {
+      mascotPreview.addEventListener('click', openMascotPicker);
+    }
+
+    bindActionButtons();
+    bindZoomControl();
+  }
+
+  /** Liga um <select data-field-meta="X"> a State.updateMeta({X: valor}) + re-render. */
+  function bindMetaSelect(fieldName) {
+    var select = document.querySelector('[data-field-meta="' + fieldName + '"]');
+    if (!select || select.tagName !== 'SELECT') return;
+    select.addEventListener('change', function () {
+      var patch = {};
+      patch[fieldName] = select.value;
+      State.updateMeta(patch);
+      fullRender();
+    });
+  }
+
+  var TITLE_FONT_SIZE_MIN = 12, TITLE_FONT_SIZE_MAX = 40, TITLE_FONT_SIZE_STEP = 1;
+  var TITLE_LETTER_SPACING_MIN = -1, TITLE_LETTER_SPACING_MAX = 6, TITLE_LETTER_SPACING_STEP = 0.5;
+
+  function bindTitleSteppers() {
+    bindStepperButton('title-font-size-inc', function (meta) {
+      return Helpers.clamp(meta.titleFontSize + TITLE_FONT_SIZE_STEP, TITLE_FONT_SIZE_MIN, TITLE_FONT_SIZE_MAX);
+    }, 'titleFontSize');
+    bindStepperButton('title-font-size-dec', function (meta) {
+      return Helpers.clamp(meta.titleFontSize - TITLE_FONT_SIZE_STEP, TITLE_FONT_SIZE_MIN, TITLE_FONT_SIZE_MAX);
+    }, 'titleFontSize');
+    bindStepperButton('title-letter-spacing-inc', function (meta) {
+      return Helpers.clamp(meta.titleLetterSpacing + TITLE_LETTER_SPACING_STEP, TITLE_LETTER_SPACING_MIN, TITLE_LETTER_SPACING_MAX);
+    }, 'titleLetterSpacing');
+    bindStepperButton('title-letter-spacing-dec', function (meta) {
+      return Helpers.clamp(meta.titleLetterSpacing - TITLE_LETTER_SPACING_STEP, TITLE_LETTER_SPACING_MIN, TITLE_LETTER_SPACING_MAX);
+    }, 'titleLetterSpacing');
+  }
+
+  function bindStepperButton(action, computeNextValue, fieldName) {
+    var btn = document.querySelector('[data-action="' + action + '"]');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var patch = {};
+      patch[fieldName] = computeNextValue(State.getState().meta);
+      State.updateMeta(patch);
+      fullRender();
+    });
+  }
+
+  function bindActionButtons() {
+    var saveBtn = document.querySelector('[data-action="save-now"]');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        Storage.saveState(State.getState());
+        showToast('Painel salvo neste navegador.');
+      });
+    }
+
+    var exportBtn = document.querySelector('[data-action="export-json"]');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function () {
+        var state = State.getState();
+        Helpers.downloadTextFile('guardiao-da-rotina.json', Storage.serializeForExport(state));
+      });
+    }
+
+    var importInput = document.querySelector('[data-role="import-json-input"]');
+    var importBtn = document.querySelector('[data-action="import-json"]');
+    if (importBtn && importInput) {
+      importBtn.addEventListener('click', function () { importInput.click(); });
+      importInput.addEventListener('change', function () {
+        var file = importInput.files && importInput.files[0];
+        if (!file) return;
+        Storage.importFromFile(file).then(function (state) {
+          State.replaceState(state);
+          fullRender();
+          showToast('Configuração importada com sucesso.');
+        }).catch(function (err) {
+          showToast(err.message || 'Não foi possível importar o arquivo.');
+        });
+        importInput.value = '';
+      });
+    }
+
+    var resetBtn = document.querySelector('[data-action="reset-panel"]');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        if (!window.confirm('Isso apaga o painel atual e começa um novo em branco. Continuar?')) return;
+        Storage.clearSavedState();
+        State.replaceState(State.createDefaultState());
+        fullRender();
+      });
+    }
+
+    var printBtn = document.querySelector('[data-action="print-panel"]');
+    if (printBtn) {
+      printBtn.addEventListener('click', function () { window.print(); });
+    }
+  }
+
+  function bindZoomControl() {
+    var zoomInput = document.querySelector('[data-role="zoom-range"]');
+    if (!zoomInput) return;
+    function applyZoom() {
+      panelContainer.style.transform = 'scale(' + (parseInt(zoomInput.value, 10) / 100) + ')';
+    }
+    zoomInput.addEventListener('input', applyZoom);
+    applyZoom(); // aplica o zoom inicial (o slider já começa em 70%)
+  }
+
+  // --- Ponto de entrada da fiação (chamado por main.js) -------------------
+  function init(panelContainerEl) {
+    panelContainer = panelContainerEl;
+    Guardiao.IconPicker.init();
+    Guardiao.TextStylePicker.init();
+    Guardiao.RenderEditor.buildStaticChoices();
+    bindPanelEvents();
+    bindSidebarEvents();
+    fullRender();
+  }
+
+  Guardiao.Bindings = { init: init, fullRender: fullRender };
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+<script>
+/* ============================================================
+ * Guardião da Rotina — main.js
+ * Ponto de entrada: carrega o painel salvo (se existir), monta a
+ * aplicação e liga os eventos. Único arquivo que "decide" a
+ * ordem de bootstrap — todo o resto só expõe funções.
+ * ============================================================ */
+(function (Guardiao) {
+  'use strict';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var saved = Guardiao.Storage.loadState();
+    if (saved) {
+      Guardiao.State.replaceState(saved);
+    }
+
+    var panelContainer = document.getElementById('painel-impressao-area');
+    Guardiao.Bindings.init(panelContainer);
+  });
+})(window.Guardiao = window.Guardiao || {});
+
+</script>
+</body>
+</html>
+

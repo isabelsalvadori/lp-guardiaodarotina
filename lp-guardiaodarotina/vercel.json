@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/lp-guardiaodarotina", "destination": "/" },
+    { "source": "/obrigado-guardiaodarotina", "destination": "/obrigado-guardiaodarotina.html" }
+  ]
+}

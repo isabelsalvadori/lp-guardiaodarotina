@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/lp-guardiaodarotina", "destination": "/" },
-    { "source": "/obrigado-guardiaodarotina", "destination": "/obrigado-guardiaodarotina.html" }
+    { "source": "/obrigado-guardiaodarotina", "destination": "/obrigado-guardiaodarotina.html" },
+    { "source": "/home-guardiaodarotina", "destination": "/home-guardiaodarotina.html" },
+    { "source": "/ferramenta-guardiaodarotina", "destination": "/ferramenta-guardiaodarotina.html" }
   ]
 }

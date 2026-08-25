@@ -3,17 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardião da Rotina — Rotina visual personalizada para o seu filho</title>
-<meta name="description" content="O sistema que Isabel Salvadori desenvolveu com os próprios filhos para criar rotinas visuais que crianças neurodivergentes realmente seguem. Acesso vitalício por R$29,90.">
+<title>Guardião da Rotina | Crie com seu filho a rotina visual que ele consegue ver</title>
+<meta name="description" content="Com o Guardião da Rotina você cria, junto com seu filho, uma rotina visual com as imagens, cores e personagens que fazem sentido para ele. Acesso vitalício por R$29,90.">
 <link rel="preload" as="image" href="painel-pronto.webp" type="image/webp">
-<link rel="preload" as="font" href="https://fonts.gstatic.com/s/dmsans/v15/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu6-K6z9mXTvvI.woff2" crossorigin>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700;800&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700;800&display=swap"></noscript>
-
-<link rel="stylesheet" href="style.css">
 
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -40,6 +36,987 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1706814706921512&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+
+<style>
+/* ==========================================================================
+   Guardião da Rotina — index-v2 (redesign visual)
+   Identidade visual: preto, grafite, verde MIIRTUS, argila, dourado, marfim
+   Narrativa de scroll: CAOS → ORGANIZAÇÃO → PERSONALIZAÇÃO → "ESSE É O MEU" → COMPRA
+   ========================================================================== */
+
+:root {
+  --preto: #1A1A1A;
+  --grafite: #2D3230;
+  --verde: #24483F;
+  --argila: #B97059;
+  --dourado: #E3BD62;
+  --dourado-hover: #cca757;
+  --marfim: #F5F1E8;
+
+  --font-corpo: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-autoral: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+  --secao-py: clamp(3.25rem, 7vw, 6rem);
+  --secao-px: clamp(1.25rem, 5vw, 3rem);
+  --max-w: 1140px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--preto);
+  color: var(--marfim);
+  font-family: var(--font-corpo);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+ul { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, h4, p { margin: 0; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ---------- Foco visível (acessibilidade) ---------- */
+a:focus-visible,
+button:focus-visible,
+.btn-cta:focus-visible {
+  outline: 2px solid var(--dourado);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- Utilitários ---------- */
+.secao { padding: var(--secao-py) var(--secao-px); position: relative; }
+.secao--compacta { padding-top: clamp(2rem, 4vw, 3.5rem); padding-bottom: clamp(2rem, 4vw, 3.5rem); }
+.container { max-width: var(--max-w); margin: 0 auto; position: relative; }
+.container-estreito { max-width: 660px; margin: 0 auto; position: relative; }
+.container-media { max-width: 820px; margin: 0 auto; position: relative; }
+
+.eyebrow {
+  display: block;
+  color: var(--argila);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+.eyebrow--dourado { color: var(--dourado); }
+.centralizado { text-align: center; }
+
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+/* ---------- Botão CTA ---------- */
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--dourado);
+  color: var(--preto);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 1.05rem 2.1rem;
+  border-radius: 8px;
+  border: none;
+  text-align: center;
+  min-width: 280px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-cta:hover { background: var(--dourado-hover); transform: translateY(-2px); box-shadow: 0 12px 24px -10px rgba(227,189,98,0.45); }
+.btn-cta:active { transform: translateY(0); }
+.btn-cta--grande { padding: 1.25rem 2.25rem; font-size: 1.05rem; }
+
+.cta-inline { margin-top: 2.5rem; text-align: center; }
+
+.cta-intermediario {
+  margin-top: 2.5rem;
+  text-align: center;
+}
+.cta-intermediario .microtexto {
+  margin-top: 0.8rem;
+}
+.cta-intermediario--claro .microtexto {
+  color: rgba(26,26,26,0.55);
+}
+.cta-intermediario--escuro .microtexto {
+  color: rgba(245,241,232,0.55);
+}
+@media (max-width: 600px) {
+  .cta-intermediario .btn-cta {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.microtexto {
+  font-size: 0.8rem;
+  color: rgba(245, 241, 232, 0.45);
+  margin-top: 0.9rem;
+}
+
+.destaque-dourado { color: var(--dourado); }
+
+/* ---------- Browser frame ---------- */
+.browser-frame {
+  background: var(--grafite);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(245, 241, 232, 0.08);
+  position: relative;
+  z-index: 3;
+}
+.browser-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+}
+.browser-frame__dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(245, 241, 232, 0.2); }
+.browser-frame__dot:nth-child(1) { background: var(--argila); }
+.browser-frame__dot:nth-child(2) { background: var(--dourado); }
+.browser-frame__dot:nth-child(3) { background: rgba(245, 241, 232, 0.25); }
+.browser-frame img { width: 100%; height: auto; }
+
+/* ---------- Componente: stickers flutuantes (decorativos) ---------- */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.stickers-field { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.sticker { position: absolute; transform: rotate(var(--rot, 0deg)); }
+.sticker__inner {
+  animation: floatY 4.6s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  background: var(--marfim);
+  color: var(--preto);
+  border-radius: 10px;
+  box-shadow: 0 18px 34px -12px rgba(0,0,0,0.55);
+  border: 1px solid rgba(26,26,26,0.06);
+  padding: 0.7rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sticker__label { display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(26,26,26,0.55); margin-bottom: 0.4rem; }
+.sticker__dots { display: flex; gap: 0.35rem; }
+.sticker__dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.08); }
+.sticker__chips { display: flex; gap: 0.35rem; }
+.sticker__chip { width: 26px; height: 26px; border-radius: 6px; background: rgba(26,26,26,0.06); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+.sticker__inner--nome { background: var(--verde); color: var(--marfim); text-align: center; }
+.sticker__inner--nota { background: var(--dourado); color: var(--preto); font-family: var(--font-autoral); font-style: italic; font-weight: 600; font-size: 0.85rem; }
+
+/* ---------- Divisor sutil entre seções claras vizinhas ---------- */
+.secao-divisor { background: var(--marfim); line-height: 0; }
+.secao-divisor svg { display: block; width: 100%; height: 40px; }
+@media (min-width: 860px) { .secao-divisor svg { height: 60px; } }
+
+/* ==========================================================================
+   BLOCO 1 — HERO
+   ========================================================================== */
+.hero { background: var(--marfim); padding-top: clamp(3rem, 8vw, 6rem); }
+.hero .container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.hero__copy { max-width: 560px; position: relative; z-index: 5; }
+.hero__headline {
+  font-weight: 700;
+  color: var(--preto);
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  line-height: 1.22;
+  margin-bottom: 1.5rem;
+}
+.hero__subheadline {
+  font-weight: 300;
+  color: rgba(26, 26, 26, 0.72);
+  font-size: 1.15rem;
+  line-height: 1.65;
+  margin-bottom: 2.25rem;
+}
+.hero__copy .microtexto { color: rgba(26, 26, 26, 0.55); }
+.hero__visual { position: relative; padding: 1.5rem; }
+.hero__visual .browser-frame {
+  transform: rotate(-2deg);
+  transition: transform 0.4s ease;
+  box-shadow: 0 28px 55px -20px rgba(26, 26, 26, 0.28);
+}
+.hero__visual .browser-frame:hover { transform: rotate(0deg); }
+.hero__blob {
+  position: absolute;
+  width: 78%;
+  height: 78%;
+  top: 8%;
+  left: 8%;
+  background: var(--argila);
+  opacity: 0.10;
+  border-radius: 42% 58% 65% 35% / 45% 45% 55% 55%;
+  filter: blur(38px);
+  z-index: 1;
+}
+.hero__blob--verde {
+  position: absolute;
+  width: 44%;
+  height: 44%;
+  bottom: -6%;
+  right: -4%;
+  background: var(--verde);
+  opacity: 0.05;
+  border-radius: 55% 45% 40% 60% / 50% 55% 45% 50%;
+  filter: blur(32px);
+  z-index: 1;
+}
+.hero__stickers .sticker__inner { box-shadow: 0 14px 28px -14px rgba(26, 26, 26, 0.24); }
+.hero__stickers .sticker--cor .sticker__inner,
+.hero__stickers .sticker--atividades .sticker__inner {
+  background: #FFFFFF;
+  border: 1px solid rgba(26, 26, 26, 0.08);
+}
+.hero__stickers .sticker--cor { top: -7%; left: -5%; }
+.hero__stickers .sticker--atividades { bottom: 5%; left: -9%; }
+.hero__stickers .sticker--nome { top: 7%; right: -7%; }
+.hero__stickers .sticker--nota { bottom: -5%; right: 3%; }
+.sticker__dot--active { position: relative; box-shadow: 0 0 0 2px var(--marfim), 0 0 0 3.5px var(--preto); }
+.sticker__dot--active::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--preto);
+}
+
+/* ==========================================================================
+   BLOCO 2 — DIA A DIA (CAOS)
+   ========================================================================== */
+.diaadia { background: var(--marfim); }
+.diaadia__headline {
+  font-weight: 700;
+  color: var(--preto);
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  line-height: 1.3;
+  max-width: 780px;
+  margin-bottom: 3.5rem;
+}
+.falas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.1rem;
+  margin-bottom: 3.5rem;
+  padding: 0.5rem 0;
+}
+@keyframes falaFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.fala {
+  padding: 0.75rem 1.4rem;
+  border-radius: 14px;
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-size: 1.05rem;
+  box-shadow: 0 10px 20px -14px rgba(26,26,26,0.22);
+  opacity: 0;
+  transform: rotate(var(--tilt, 0deg)) translateY(var(--shift, 0));
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: falaFade 0.45s ease forwards;
+  animation-play-state: paused;
+  animation-delay: var(--stagger, 0ms);
+}
+.falas.is-visible .fala { animation-play-state: running; }
+.fala:nth-child(1) { --stagger: 0ms; }
+.fala:nth-child(2) { --stagger: 90ms; }
+.fala:nth-child(3) { --stagger: 180ms; }
+.fala:nth-child(4) { --stagger: 270ms; }
+.fala:nth-child(5) { --stagger: 360ms; }
+.fala:nth-child(6) { --stagger: 450ms; }
+.fala:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 16px 26px -14px rgba(26,26,26,0.26); }
+.fala--marfim  { background: #FFFFFF; color: var(--preto); border: 1px solid rgba(26,26,26,0.08); --tilt: -2deg; --shift: 4px; }
+.fala--argila  { background: var(--argila); color: var(--marfim); --tilt: 1.5deg; --shift: -8px; font-size: 1.12rem; margin-left: -6px; }
+.fala--verde   { background: var(--verde); color: var(--marfim); --tilt: -1deg; --shift: 10px; }
+.fala--dourado { background: var(--dourado); color: var(--preto); --tilt: 2deg; --shift: -6px; font-size: 0.98rem; }
+.fala--grafite { background: var(--grafite); color: var(--marfim); --tilt: -1.5deg; --shift: 8px; margin-left: -5px; }
+.diaadia__texto {
+  max-width: 700px;
+  color: rgba(26, 26, 26, 0.72);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin-bottom: 2.5rem;
+}
+.diaadia__fechamento {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--argila);
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  max-width: 640px;
+  border-top: 1px solid rgba(26, 26, 26, 0.10);
+  padding-top: 2rem;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ==========================================================================
+   BLOCO 3 — VIRADA (Isabel entra aqui) — ORGANIZAÇÃO começa
+   ========================================================================== */
+.virada { background: var(--verde); }
+.virada .container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+.virada__foto-wrap { position: relative; max-width: 320px; margin: 0 auto; }
+.virada__foto {
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 30px 50px -20px rgba(0,0,0,0.6);
+}
+.virada__foto img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.virada__decor { position: absolute; inset: 0; pointer-events: none; }
+.virada__decor .card-tentativa { position: absolute; }
+.virada__decor .card-tentativa:nth-of-type(1) { top: -6%; left: -14%; transform: rotate(-6deg); }
+.virada__decor .card-tentativa:nth-of-type(2) { top: 18%; right: -20%; transform: rotate(4deg); }
+.virada__decor .card-tentativa:nth-of-type(3) { bottom: 20%; left: -20%; transform: rotate(3deg); }
+.virada__decor .card-tentativa--destaque { bottom: -6%; right: -10%; transform: rotate(-4deg); }
+
+.virada__headline {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--marfim);
+  font-size: clamp(1.8rem, 4.2vw, 2.5rem);
+  line-height: 1.35;
+  margin-bottom: 1.5rem;
+}
+.virada__texto { font-family: var(--font-autoral); color: rgba(245, 241, 232, 0.8); font-size: 1.18rem; line-height: 1.7; margin-bottom: 2rem; }
+.virada__cards { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.card-tentativa {
+  padding: 0.7rem 1.3rem;
+  border-radius: 8px;
+  font-family: var(--font-corpo);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid rgba(245, 241, 232, 0.18);
+  color: rgba(245, 241, 232, 0.6);
+  text-decoration: line-through;
+  background: rgba(245,241,232,0.05);
+  box-shadow: 0 10px 20px -12px rgba(0,0,0,0.5);
+}
+.card-tentativa--destaque {
+  border-color: var(--dourado);
+  color: var(--preto);
+  text-decoration: none;
+  background: var(--dourado);
+  font-size: 0.95rem;
+  box-shadow: 0 16px 30px -12px rgba(227,189,98,0.5);
+}
+.virada__decor .card-tentativa { font-size: 0.98rem; padding: 0.8rem 1.4rem; }
+.virada__decor .card-tentativa--destaque { font-size: 1rem; }
+
+/* ==========================================================================
+   BLOCO 4 — INSIGHT — PERSONALIZAÇÃO em construção
+   ========================================================================== */
+.insight { background: var(--marfim); }
+.insight .container { display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: start; }
+.insight .cta-intermediario { grid-column: 1 / -1; }
+.insight__headline {
+  font-weight: 700;
+  color: var(--preto);
+  font-size: clamp(1.8rem, 4.2vw, 2.5rem);
+  line-height: 1.35;
+  max-width: 820px;
+  margin-bottom: 1.75rem;
+}
+.insight__texto {
+  max-width: 720px;
+  color: rgba(26, 26, 26, 0.75);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin-bottom: 2.5rem;
+}
+.insight__sequencia {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 480px;
+  border-left: 2px solid var(--argila);
+  padding-left: 1.5rem;
+  font-family: var(--font-autoral);
+}
+.insight__linha {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--preto);
+}
+.insight__linha--dourada { color: var(--verde); font-weight: 600; }
+
+/* Painel simulado que se constrói no scroll */
+.builder { max-width: 320px; }
+.builder-panel {
+  background: #FFFFFF;
+  border: 1px dashed rgba(26,26,26,0.2);
+  border-radius: 14px;
+  padding: 1.5rem;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 18px 34px -22px rgba(26,26,26,0.2);
+  transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+.builder-panel__top { display: flex; justify-content: center; }
+.builder-panel__name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--preto);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.builder-panel__character {
+  align-self: center;
+  font-size: 2.4rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.builder-panel__activities { display: flex; justify-content: center; gap: 0.6rem; }
+.builder-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(36,72,63,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.builder.is-step-1 .builder-icon { opacity: 1; transform: scale(1); }
+.builder-icon:nth-child(1) { transition-delay: 0s; }
+.builder-icon:nth-child(2) { transition-delay: 0.08s; }
+.builder-icon:nth-child(3) { transition-delay: 0.16s; }
+.builder-icon:nth-child(4) { transition-delay: 0.24s; }
+.builder.is-step-2 .builder-panel { border-color: var(--argila); border-style: solid; }
+.builder.is-step-3 .builder-panel { background: linear-gradient(160deg, rgba(227,189,98,0.14), rgba(185,112,89,0.14)); box-shadow: inset 0 0 0 1px rgba(227,189,98,0.25); }
+.builder.is-step-4 .builder-panel__character { opacity: 1; transform: scale(1); }
+.builder.is-step-5 .builder-panel__name { opacity: 1; transform: translateY(0); }
+
+.builder-labels { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.builder-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(26,26,26,0.45);
+  padding: 0.35rem 0.7rem;
+  border-radius: 100px;
+  border: 1px solid rgba(26,26,26,0.15);
+  transition: color 0.4s ease, border-color 0.4s ease;
+}
+.builder-label.is-active { color: var(--preto); background: var(--dourado); border-color: var(--dourado); }
+
+/* ==========================================================================
+   BLOCO 5 — PRODUTO
+   ========================================================================== */
+.produto { background: var(--preto); }
+.produto__headline {
+  font-weight: 800;
+  color: var(--marfim);
+  font-size: clamp(2.2rem, 5.5vw, 3.2rem);
+  margin-bottom: 1.5rem;
+}
+.produto .container { display: grid; grid-template-columns: 1fr; gap: 3rem; align-items: center; }
+.produto__texto { color: rgba(245, 241, 232, 0.75); font-size: 1.05rem; line-height: 1.75; margin-bottom: 2rem; max-width: 560px; }
+.produto__copy { position: relative; z-index: 5; }
+.produto__visual { position: relative; padding: 1.5rem; }
+.produto__blob {
+  position: absolute;
+  inset: -8%;
+  background: radial-gradient(circle at 25% 20%, rgba(185,112,89,0.14), transparent 55%),
+              radial-gradient(circle at 80% 80%, rgba(227,189,98,0.12), transparent 55%);
+  filter: blur(28px);
+  z-index: 1;
+}
+.produto__stickers .sticker--chips { top: -6%; right: -8%; }
+.produto__stickers .sticker--dots { bottom: -8%; left: -8%; }
+
+/* ==========================================================================
+   BLOCO 6 — COMO FUNCIONA (ORGANIZAÇÃO — fundo claro)
+   ========================================================================== */
+.como { background: var(--marfim); }
+.como__headline {
+  font-weight: 700;
+  color: var(--preto);
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  max-width: 780px;
+  margin-bottom: 3rem;
+}
+.passos { display: grid; grid-template-columns: 1fr; gap: 1.75rem; }
+.passo {
+  background: #FFFFFF;
+  border-top: 4px solid var(--argila);
+  border-radius: 10px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 18px 32px -22px rgba(26,26,26,0.25);
+}
+.passo--personalize { border-top-color: var(--dourado); background: linear-gradient(180deg, rgba(227,189,98,0.08), #FFFFFF 40%); }
+.passo--salve { border-top-color: var(--verde); }
+.passo--mudou { border-top-color: var(--argila); }
+.passo__numero { font-weight: 800; color: var(--verde); font-size: 1.6rem; margin-bottom: 1rem; }
+.passo__titulo { font-weight: 700; color: var(--preto); font-size: 1.12rem; margin-bottom: 0.75rem; }
+.passo__texto { color: rgba(26, 26, 26, 0.68); font-size: 0.97rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.passo__img {
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;
+  background: rgba(26,26,26,0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(26,26,26,0.08);
+  margin-top: auto;
+}
+.passo__preview { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+.passo__preview span {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(185,112,89,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+.passo__swatches { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+.passo__swatches span { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(26,26,26,0.1); }
+.passo__flow { display: flex; align-items: center; gap: 0.5rem; margin-top: auto; margin-bottom: 0.5rem; }
+.passo__flow-step {
+  flex: 1;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--verde);
+  background: rgba(36,72,63,0.08);
+  border-radius: 8px;
+  padding: 0.6rem 0.3rem;
+}
+.passo__flow-arrow { color: rgba(26,26,26,0.35); font-size: 0.9rem; }
+.passo__comparativo { display: flex; gap: 0.9rem; margin-top: auto; }
+.mini-card {
+  flex: 1;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid rgba(26, 26, 26, 0.1);
+  background: rgba(26,26,26,0.03);
+  transition: transform 0.25s ease;
+}
+.mini-card__label { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; }
+.mini-card--antes { transform: rotate(-2deg); }
+.mini-card--antes .mini-card__label { color: rgba(26, 26, 26, 0.4); }
+.mini-card--agora { background: var(--dourado); border-color: var(--dourado); transform: rotate(2deg) translateY(-4px); }
+.mini-card--agora .mini-card__label { color: var(--preto); }
+.mini-card__texto { font-size: 0.85rem; color: rgba(26, 26, 26, 0.7); }
+.mini-card--agora .mini-card__texto { color: rgba(26,26,26,0.8); }
+
+/* ==========================================================================
+   BLOCO 7 — A CRIANÇA PARTICIPA ("ESSE É O MEU" — pico de vivacidade)
+   ========================================================================== */
+.participa { background: var(--preto); overflow: visible; }
+.participa .container-media { text-align: center; position: relative; z-index: 5; padding-top: clamp(1.75rem, 3vw, 2.25rem); }
+.participa__headline {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--dourado);
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+  line-height: 1.4;
+  margin-bottom: 2rem;
+}
+.participa__texto { color: rgba(245, 241, 232, 0.75); font-size: 1.05rem; line-height: 1.8; }
+.participa__board { position: absolute; inset: -1.5rem -1rem; pointer-events: none; z-index: 1; }
+.participa__board .sticker { position: absolute; }
+.participa__board .sticker:nth-of-type(1) { top: -2%; left: 2%; }
+.participa__board .sticker:nth-of-type(2) { top: 4%; right: 0%; }
+.participa__board .sticker:nth-of-type(3) { bottom: 16%; left: -2%; }
+.participa__board .sticker:nth-of-type(4) { bottom: 4%; right: 4%; }
+.participa__board .sticker:nth-of-type(5) { top: 46%; left: -6%; }
+.participa__board .sticker:nth-of-type(6) { top: 50%; right: -4%; }
+.participa__board .sticker:nth-of-type(7) { bottom: -4%; left: 30%; }
+.board-note {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: var(--marfim);
+  color: var(--preto);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 14px 26px -14px rgba(0,0,0,0.55);
+}
+
+/* ==========================================================================
+   BLOCO 8 — DIFERENCIAL
+   ========================================================================== */
+.diferencial { background: var(--grafite); }
+.diferencial__headline {
+  font-weight: 700;
+  color: var(--marfim);
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  max-width: 780px;
+  margin-bottom: 1.75rem;
+}
+.diferencial__texto { max-width: 720px; color: rgba(245, 241, 232, 0.75); font-size: 1.05rem; line-height: 1.75; margin-bottom: 1.5rem; }
+.diferencial__destaque {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--dourado);
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  margin-bottom: 3rem;
+}
+.comparativo { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+.comparativo__separador {
+  display: none;
+  text-align: center;
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: rgba(245,241,232,0.5);
+  margin: -0.5rem 0 0;
+}
+.comp-card { border-radius: 10px; padding: 2rem; background: var(--preto); border-top: 3px solid rgba(245, 241, 232, 0.15); position: relative; }
+.comp-card--pronto { background: #202220; border-top-color: rgba(245,241,232,0.12); filter: grayscale(0.7); opacity: 0.72; box-shadow: none; }
+.comp-card--guardiao { border-top-color: var(--dourado); background: linear-gradient(155deg, rgba(36,72,63,0.55), rgba(227,189,98,0.12)); filter: none; opacity: 1; }
+.comp-card__extras { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; }
+.comp-card__swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(245,241,232,0.2); }
+.comp-card__chip { width: 26px; height: 26px; border-radius: 6px; background: rgba(245,241,232,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+.comp-card__titulo { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(245, 241, 232, 0.55); margin-bottom: 1.25rem; }
+.comp-card--guardiao .comp-card__titulo { color: var(--dourado); }
+.comp-card__refresh { width: 16px; height: 16px; }
+.comp-card__stack { position: relative; height: 70px; margin-bottom: 1.5rem; }
+.comp-card__stack span {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(245,241,232,0.15);
+}
+.comp-card--pronto .comp-card__stack span { background: rgba(245,241,232,0.05); }
+.comp-card--guardiao .comp-card__stack span:nth-child(1) { background: rgba(227,189,98,0.12); transform: rotate(-3deg) translateY(4px); }
+.comp-card--guardiao .comp-card__stack span:nth-child(2) { background: rgba(185,112,89,0.16); transform: rotate(2deg) translateY(-2px); box-shadow: 0 10px 20px -12px rgba(0,0,0,0.5); }
+.comp-card__linha { display: flex; align-items: center; gap: 0.6rem; font-size: 0.98rem; color: rgba(245, 241, 232, 0.8); }
+.comp-card__icone { font-size: 1.1rem; }
+
+/* ==========================================================================
+   BLOCO 9 — O QUE MUDA NA PRÁTICA
+   ========================================================================== */
+.pratica { background: var(--verde); }
+.pratica__headline {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--marfim);
+  font-size: clamp(1.9rem, 4.4vw, 2.6rem);
+  line-height: 1.35;
+  max-width: 820px;
+  margin-bottom: 1.75rem;
+}
+.pratica__texto { max-width: 720px; color: rgba(245, 241, 232, 0.85); font-size: 1.05rem; line-height: 1.75; margin-bottom: 3rem; }
+.pratica__contraste {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+  max-width: 900px;
+}
+.pratica__coluna { text-align: center; }
+.pratica__label { display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245, 241, 232, 0.55); margin-bottom: 1.25rem; }
+.pratica__falas { display: flex; flex-direction: column; gap: 0.6rem; align-items: center; }
+.pratica__fala {
+  padding: 0.55rem 1.1rem;
+  border-radius: 100px;
+  font-family: var(--font-autoral);
+  font-style: italic;
+  font-size: 0.95rem;
+  box-shadow: 0 8px 18px -12px rgba(0,0,0,0.45);
+}
+.pratica__fala:nth-child(1) { background: var(--marfim); color: var(--preto); transform: rotate(-1.5deg); }
+.pratica__fala:nth-child(2) { background: var(--argila); color: var(--marfim); transform: rotate(1deg); }
+.pratica__fala:nth-child(3) { background: rgba(245,241,232,0.1); color: var(--marfim); border: 1px solid rgba(245,241,232,0.2); transform: rotate(-1deg); }
+.pratica__seta { display: flex; align-items: center; justify-content: center; color: var(--dourado); }
+.pratica__seta svg { width: 34px; height: 34px; }
+.pratica__painel { border-radius: 10px; overflow: hidden; border: 1px solid rgba(245, 241, 232, 0.15); }
+.pratica__painel img { width: 100%; height: 220px; object-fit: cover; }
+
+/* ==========================================================================
+   BLOCO 10 — OFERTA (COMPRA)
+   ========================================================================== */
+.oferta { background: var(--verde); }
+.oferta__card {
+  background: var(--marfim);
+  border-radius: 20px;
+  padding: clamp(1.75rem, 4vw, 3.25rem);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  box-shadow: 0 40px 70px -30px rgba(0,0,0,0.5);
+}
+.oferta__headline {
+  font-weight: 800;
+  color: var(--preto);
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  line-height: 1.25;
+  margin-bottom: 2rem;
+}
+.oferta__lista { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 2rem; }
+.oferta__lista li { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 1rem; color: rgba(26, 26, 26, 0.8); }
+.oferta__lista svg { flex-shrink: 0; margin-top: 0.2rem; }
+.oferta__preco { font-weight: 800; color: var(--verde); font-size: clamp(3rem, 8vw, 4.2rem); line-height: 1; margin-bottom: 0.75rem; }
+.oferta__texto { color: rgba(26, 26, 26, 0.6); font-size: 0.98rem; margin-bottom: 2rem; }
+.oferta__visual { position: relative; }
+.oferta__visual-frame { border-radius: 10px; overflow: hidden; border: 1px solid rgba(26,26,26,0.1); position: relative; z-index: 3; box-shadow: 0 24px 44px -20px rgba(26,26,26,0.3); }
+.oferta__visual-echo { position: absolute; inset: 0; border-radius: 10px; background: rgba(185,112,89,0.18); z-index: 1; transform: rotate(4deg) scale(0.96); }
+.oferta__visual-echo--2 { background: rgba(227,189,98,0.22); transform: rotate(-3deg) scale(0.98); z-index: 2; }
+
+/* ==========================================================================
+   BLOCO 11 — GARANTIA
+   ========================================================================== */
+.garantia { background: var(--verde); }
+.garantia .container-estreito { display: flex; flex-direction: column; align-items: center; }
+.garantia__stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border: 2px solid var(--dourado);
+  border-radius: 50%;
+  transform: rotate(-8deg);
+  margin: 0 auto 1.25rem;
+  font-family: var(--font-corpo);
+  color: var(--dourado);
+}
+.garantia__stamp strong { font-size: 1.85rem; font-weight: 800; line-height: 1; }
+.garantia__stamp span { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.14em; }
+@media (min-width: 860px) {
+  .garantia__stamp { width: 122px; height: 122px; margin-bottom: 1.5rem; }
+  .garantia__stamp strong { font-size: 2.2rem; }
+  .garantia__stamp span { font-size: 0.62rem; letter-spacing: 0.16em; }
+}
+.garantia__headline {
+  font-weight: 700;
+  color: var(--marfim);
+  font-size: clamp(1.8rem, 4.2vw, 2.4rem);
+  max-width: 700px;
+  margin: 0 auto 1.5rem;
+}
+.garantia__texto { max-width: 680px; margin: 0 auto; color: rgba(245, 241, 232, 0.85); font-size: 1.05rem; line-height: 1.75; }
+
+/* ==========================================================================
+   BLOCO 12 — FAQ
+   ========================================================================== */
+.faq { background: var(--grafite); }
+.faq__headline { font-weight: 700; color: var(--marfim); font-size: clamp(1.7rem, 4vw, 2.3rem); margin-bottom: 2.5rem; max-width: 700px; }
+.accordion { display: flex; flex-direction: column; gap: 1.1rem; }
+.accordion-item {
+  background: var(--preto);
+  border-radius: 8px;
+  border-left: 4px solid transparent;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.accordion-item:hover { background: #201f1f; }
+.accordion-item:nth-child(odd).is-open { border-left-color: var(--dourado); }
+.accordion-item:nth-child(even).is-open { border-left-color: var(--argila); }
+.accordion-item__pergunta {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--marfim);
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: left;
+  padding: 1.35rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.accordion-item__icone { flex-shrink: 0; color: var(--dourado); font-size: 1.3rem; line-height: 1; transition: transform 0.25s ease; }
+.accordion-item.is-open .accordion-item__icone { transform: rotate(45deg); }
+.accordion-item__resposta { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.accordion-item__resposta-inner { padding: 0 1.5rem 1.5rem; color: rgba(245, 241, 232, 0.7); font-size: 0.98rem; line-height: 1.65; }
+
+/* ==========================================================================
+   BLOCO FINAL
+   ========================================================================== */
+.final { background: var(--preto); overflow: visible; }
+.final__inner { position: relative; }
+.final__bg {
+  position: absolute;
+  inset: -3rem -2rem;
+  background-image: url('painel-pronto.webp');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.06;
+  border-radius: 20px;
+  z-index: 0;
+}
+.final__texto {
+  font-family: var(--font-autoral);
+  font-style: italic;
+  color: var(--marfim);
+  font-size: clamp(1.3rem, 3.2vw, 1.6rem);
+  line-height: 1.55;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+.final__hr { border: none; border-top: 1px solid var(--dourado); width: 80px; margin: 0 auto 2rem; position: relative; z-index: 2; }
+.final__preco { font-weight: 700; color: var(--dourado); font-size: 1.8rem; margin-bottom: 0.4rem; position: relative; z-index: 2; }
+.final__preco-nota { color: rgba(245, 241, 232, 0.5); font-size: 0.85rem; margin-bottom: 2rem; position: relative; z-index: 2; }
+.final__fechamento { margin-top: 2rem; color: rgba(245, 241, 232, 0.6); font-size: 1rem; position: relative; z-index: 2; }
+.final .btn-cta { position: relative; z-index: 2; }
+.final__props { position: relative; z-index: 2; display: flex; justify-content: center; gap: 0.6rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.final__props span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  background: rgba(245,241,232,0.06);
+  border: 1px solid rgba(245,241,232,0.15);
+  color: rgba(245,241,232,0.7);
+}
+.final__props .is-dourado { background: var(--dourado); color: var(--preto); border-color: var(--dourado); }
+
+/* ==========================================================================
+   RODAPÉ
+   ========================================================================== */
+.rodape { background: var(--preto); padding: 2.5rem var(--secao-px); text-align: center; border-top: 1px solid rgba(245, 241, 232, 0.06); }
+.rodape p { color: rgba(245, 241, 232, 0.3); font-size: 0.82rem; margin-bottom: 0.4rem; }
+.rodape p:last-child { margin-bottom: 0; }
+.rodape a { color: var(--argila); transition: color 0.2s; }
+.rodape a:hover { color: var(--dourado); }
+
+/* ==========================================================================
+   RESPONSIVO — MOBILE (< 860px): elementos flutuantes reorganizados no fluxo
+   (mesmo conceito do desktop, sem position:absolute nem cobrir a copy)
+   ========================================================================== */
+@media (max-width: 859px) {
+  /* Hero: elementos flutuantes viram fluxo normal (não somem) */
+  .hero__stickers {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+  }
+  .hero__stickers .sticker { position: static; transform: none !important; }
+  .hero__stickers .sticker--nome { display: none; }
+  .hero__blob { width: 90%; height: 55%; top: 18%; left: 5%; opacity: 0.06; }
+  .hero__blob--verde { width: 60%; height: 40%; bottom: -4%; right: -6%; opacity: 0.04; }
+
+  /* Produto: mini cards viram fileira abaixo do mockup */
+  .produto__stickers {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+  .produto__stickers .sticker { position: static; transform: none !important; }
+  .produto__blob { width: 90%; height: 55%; top: 18%; left: 5%; opacity: 0.05; }
+
+  /* Isabel: cards decorativos passam a acompanhar a foto no fluxo */
+  .virada__decor {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+    inset: auto;
+  }
+  .virada__decor .card-tentativa { position: static; transform: none !important; }
+  .virada__decor .card-tentativa--destaque { flex-basis: 100%; justify-content: center; display: flex; margin-top: 0.35rem; }
+  .virada__foto-wrap { max-width: 220px; }
+
+  .participa__board { position: static; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+  .participa__board .sticker { position: static; transform: none !important; }
+  .participa__board .sticker:nth-of-type(n+6) { display: none; }
+  .board-note .sticker__inner, .participa__board .sticker__inner { animation: none; }
+
+  /* Dia a dia: pilha vertical com alternância de lado, mantendo pequenos ângulos */
+  .falas { flex-direction: column; align-items: stretch; gap: 0.85rem; }
+  .fala { align-self: flex-start; max-width: 82%; --tilt: -1deg; --shift: 0px; }
+  .fala:nth-child(2) { align-self: flex-end; --tilt: 1deg; }
+  .fala:nth-child(4) { align-self: center; max-width: 62%; text-align: center; --tilt: 0deg; }
+  .fala:nth-child(5) { align-self: flex-end; --tilt: 1deg; }
+
+  .oferta__visual-echo, .oferta__visual-echo--2 { display: none; }
+
+  .comparativo__separador { display: block; }
+}
+
+/* ==========================================================================
+   RESPONSIVO — DESKTOP (min 860px)
+   ========================================================================== */
+@media (min-width: 860px) {
+  .hero .container { grid-template-columns: 1.1fr 1fr; gap: 4rem; }
+  .virada .container { grid-template-columns: 320px 1fr; }
+  .insight .container { grid-template-columns: 1.2fr 0.8fr; }
+  .produto .container { grid-template-columns: 1fr 1fr; }
+  .passos { grid-template-columns: repeat(2, 1fr); }
+  .oferta__card { grid-template-columns: 1.1fr 0.9fr; align-items: center; }
+  .comparativo { grid-template-columns: repeat(2, 1fr); }
+  .pratica__contraste { grid-template-columns: 1fr auto 1fr; }
+}
+
+@media (min-width: 1080px) {
+  .passos { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ==========================================================================
+   ACESSIBILIDADE — Movimento reduzido
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Elementos cuja entrada depende de animation/transition ficam visíveis direto */
+  .fala { opacity: 1 !important; }
+}
+</style>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -48,19 +1025,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <!-- ==========================================================================
-     SEÇÃO 1 — HERO
+     BLOCO 1 — HERO
      ========================================================================== -->
 <header class="hero secao">
   <div class="container">
     <div class="hero__copy">
-      <span class="eyebrow">Rotina visual personalizada</span>
-      <h1 class="hero__headline">Você finalmente consegue criar a rotina visual que o seu filho vai realmente seguir.</h1>
-      <p class="hero__subheadline">O Guardião da Rotina é o sistema que eu desenvolvi com os meus próprios filhos. Agora você aplica direto para o seu, na hora, do jeito que ele precisa.</p>
-      <p class="hero__nota">Sem esperar. Sem depender de ninguém. Sem modelo genérico que não serve para criança nenhuma.</p>
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora — R$29,90</a>
-      <p class="microtexto">Acesso imediato · Garantia de 7 dias · Funciona no celular</p>
+      <span class="eyebrow">Rotina visual feita com o seu filho</span>
+      <h1 class="hero__headline">Talvez ele não precise que você lembre de tudo. Talvez precise conseguir ver o que vem agora.</h1>
+      <p class="hero__subheadline">Com o Guardião da Rotina, você cria junto com seu filho uma rotina visual com as atividades, imagens, cores e personagens que fazem sentido para ele. Ele participa da criação. Você imprime. E a rotina deixa de existir só na sua cabeça.</p>
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero criar a rotina do meu filho</a>
+      <p class="microtexto">R$29,90 · pagamento único · acesso imediato e vitalício</p>
     </div>
     <div class="hero__visual">
+      <div class="hero__blob" aria-hidden="true"></div>
+      <div class="hero__blob hero__blob--verde" aria-hidden="true"></div>
       <div class="browser-frame">
         <div class="browser-frame__bar">
           <span class="browser-frame__dot"></span>
@@ -69,388 +1047,546 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <picture>
           <source srcset="painel-pronto.webp" type="image/webp">
-          <img src="painel-pronto.png" alt="Painel de rotina visual personalizado pronto para imprimir" width="960" height="720" fetchpriority="high">
+          <img src="painel-pronto.png" alt="Painel de rotina visual personalizado, pronto para imprimir" width="960" height="720" fetchpriority="high">
         </picture>
+      </div>
+
+      <!-- Elementos decorativos flutuantes (não fazem parte do conteúdo) -->
+      <div class="stickers-field hero__stickers" aria-hidden="true">
+        <div class="sticker sticker--cor" style="--rot:-3deg">
+          <div class="sticker__inner">
+            <span class="sticker__label">Escolha uma cor</span>
+            <span class="sticker__dots">
+              <span class="sticker__dot" style="background:#B97059"></span>
+              <span class="sticker__dot" style="background:#24483F"></span>
+              <span class="sticker__dot sticker__dot--active" style="background:#E3BD62"></span>
+              <span class="sticker__dot" style="background:#2D3230"></span>
+            </span>
+          </div>
+        </div>
+        <div class="sticker sticker--atividades" style="--rot:2deg">
+          <div class="sticker__inner" style="--delay:.4s">
+            <span class="sticker__label">Atividades</span>
+            <span class="sticker__chips">
+              <span class="sticker__chip">🦷</span>
+              <span class="sticker__chip">🎒</span>
+              <span class="sticker__chip">🍽️</span>
+              <span class="sticker__chip">🛁</span>
+            </span>
+          </div>
+        </div>
+        <div class="sticker sticker--nome" style="--rot:3deg">
+          <div class="sticker__inner sticker__inner--nome" style="--delay:.8s">DAVI</div>
+        </div>
+        <div class="sticker sticker--nota" style="--rot:-2deg">
+          <div class="sticker__inner sticker__inner--nota" style="--delay:1.2s">Feito por ele também :)</div>
+        </div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ==========================================================================
-     SEÇÃO 2 — DOR
-     ========================================================================== -->
-<section class="dor secao">
+<div class="secao-divisor" aria-hidden="true">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,30 C240,60 480,0 720,18 C960,36 1200,6 1440,30 L1440,60 L0,60 Z" style="fill:var(--argila); opacity:.07"></path>
+    <path d="M0,30 C240,60 480,0 720,18 C960,36 1200,6 1440,30" style="fill:none; stroke:var(--argila); stroke-width:1.5; opacity:.3"></path>
+  </svg>
+</div>
 
-  <!-- Frase de impacto -->
-  <div class="dor__impacto reveal">
-    <p class="dor__frase-grande">Você já tentou.<br>Não funcionou.<br><span>Não é culpa sua.</span></p>
-  </div>
-
-  <!-- Pills das tentativas -->
-  <div class="dor__tentativas reveal">
-    <span class="pill pill--riscada">Tabela do Google</span>
-    <span class="pill pill--riscada">Cartõezinhos plastificados</span>
-    <span class="pill pill--riscada">Tutorial no YouTube</span>
-    <span class="pill pill--riscada">Aplicativo de rotina</span>
-    <span class="pill pill--riscada">Agenda colorida</span>
-    <span class="pill pill--riscada">Quadro de tarefas</span>
-  </div>
-
-  <!-- Frase explicativa curta -->
-  <div class="dor__explicacao reveal">
-    <p>Nenhuma dessas ferramentas foi feita para <strong>o filho específico que você tem em casa.</strong></p>
-    <p>O seu filho tem o jeito dele. A sequência que faz sentido para ele. Os ícones que ele reconhece.</p>
-  </div>
-
-  <!-- Antes e depois em tela cheia -->
-  <div class="dor-transformacao reveal">
-    <figure class="dor-transformacao__item">
-      <picture>
-        <source srcset="dor-1.webp" type="image/webp">
-        <img src="dor-1.png" alt="Criança dispersa, sem rotina" loading="lazy">
-      </picture>
-      <div class="dor-transformacao__overlay">
-        <span class="dor-transformacao__label dor-transformacao__label--antes">Sem rotina visual</span>
-        <p class="dor-transformacao__desc">Instrução repetida. Resistência. Desgaste.</p>
-      </div>
-    </figure>
-    <figure class="dor-transformacao__item">
-      <picture>
-        <source srcset="transformacao-2.webp" type="image/webp">
-        <img src="transformacao-2.png" alt="Criança organizada e autônoma" loading="lazy">
-      </picture>
-      <div class="dor-transformacao__overlay dor-transformacao__overlay--depois">
-        <span class="dor-transformacao__label dor-transformacao__label--depois">Com o Guardião da Rotina</span>
-        <p class="dor-transformacao__desc">Autonomia. Menos conflito. Mais fôlego.</p>
-      </div>
-    </figure>
-  </div>
-
-</section>
+<main>
 
 <!-- ==========================================================================
-     SEÇÃO 3 — POR QUE FUNCIONA
+     BLOCO 2 — DIA A DIA (o caos das falas repetidas)
      ========================================================================== -->
-<section class="porque secao">
+<section class="diaadia secao">
   <div class="container">
+    <h2 class="diaadia__headline reveal">Tem dias em que parece que você é o lembrete oficial da casa.</h2>
 
-    <span class="eyebrow reveal">Por que rotina visual funciona</span>
-
-    <!-- Headline enorme -->
-    <h2 class="porque__headline-grande reveal">
-      O cérebro<br><em>neurodivergente</em><br>precisa <span class="destaque-dourado">ver</span><br>para processar.
-    </h2>
-
-    <!-- Dois blocos lado a lado -->
-    <div class="porque__blocos reveal">
-      <div class="porque__bloco">
-        <div class="porque__bloco-icone">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-            <circle cx="32" cy="32" r="30" stroke="#E3BD62" stroke-width="1.5"/>
-            <path d="M20 32 C20 24 26 18 32 18 C38 18 44 24 44 32" stroke="#E3BD62" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M26 32 C26 28 29 25 32 25 C35 25 38 28 38 32" stroke="#B97059" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="32" cy="32" r="3" fill="#E3BD62"/>
-            <path d="M32 35 L32 46" stroke="#E3BD62" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M26 40 L38 40" stroke="#E3BD62" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
-          </svg>
-        </div>
-        <h3 class="porque__bloco-titulo">Instrução falada</h3>
-        <p class="porque__bloco-texto">A informação entra, mas o cérebro não consegue retê-la tempo suficiente para agir. Não é teimosia. É processamento.</p>
-        <p class="porque__bloco-resultado porque__bloco-resultado--negativo">→ Repetição. Conflito. Esgotamento.</p>
-      </div>
-
-      <div class="porque__bloco porque__bloco--destaque">
-        <div class="porque__bloco-icone">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48">
-            <circle cx="32" cy="32" r="30" fill="#E3BD62" fill-opacity="0.08" stroke="#E3BD62" stroke-width="1.5"/>
-            <rect x="18" y="20" width="28" height="6" rx="2" fill="#E3BD62" fill-opacity="0.3" stroke="#E3BD62" stroke-width="1"/>
-            <rect x="18" y="30" width="28" height="6" rx="2" fill="#E3BD62" fill-opacity="0.5" stroke="#E3BD62" stroke-width="1"/>
-            <rect x="18" y="40" width="28" height="6" rx="2" fill="#E3BD62" fill-opacity="0.8" stroke="#E3BD62" stroke-width="1"/>
-            <path d="M46 23 L50 23" stroke="#E3BD62" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M46 33 L50 33" stroke="#E3BD62" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M46 43 L50 43" stroke="#E3BD62" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h3 class="porque__bloco-titulo">Rotina visual na parede</h3>
-        <p class="porque__bloco-texto">A criança consulta sozinha, no tempo dela, quantas vezes precisar. A informação está lá. Sempre. Sem depender de ninguém falar.</p>
-        <p class="porque__bloco-resultado porque__bloco-resultado--positivo">→ Autonomia. Previsibilidade. Segurança.</p>
-      </div>
+    <div class="falas reveal" data-stagger>
+      <span class="fala fala--marfim">"Vai escovar os dentes."</span>
+      <span class="fala fala--argila">"Já colocou o uniforme?"</span>
+      <span class="fala fala--verde">"Agora guarda isso."</span>
+      <span class="fala fala--dourado">"Pega a mochila."</span>
+      <span class="fala fala--grafite">"Vai tomar banho."</span>
+      <span class="fala fala--marfim">"Não esquece…"</span>
     </div>
 
-    <!-- Imagem de transformação -->
-    <div class="secao-visual reveal">
-      <picture>
-        <source srcset="transformacao-1.webp" type="image/webp">
-        <img src="transformacao-1.png" alt="Criança com autonomia depois da rotina visual" loading="lazy">
-      </picture>
+    <p class="diaadia__texto reveal">E não é porque seu filho não ouviu. Muitas vezes ele simplesmente estava fazendo outra coisa, perdeu a sequência ou não sabe sozinho qual é o próximo passo. Então você lembra. Depois lembra de novo. E, quando percebe, passou uma parte enorme do dia conduzindo mentalmente a rotina de outra pessoa.</p>
+
+    <div class="cta-intermediario cta-intermediario--claro">
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero que meu filho tenha autonomia agora</a>
     </div>
 
-    <div class="cta-inline reveal">
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora — R$29,90</a>
-    </div>
-
+    <p class="diaadia__fechamento reveal">É cansativo para você. E também não é muito divertido para ele.</p>
   </div>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 4 — PRODUTO
+     BLOCO 3 — VIRADA (Isabel entra aqui)
+     ========================================================================== -->
+<section class="virada secao">
+  <div class="container">
+    <div class="virada__foto-wrap reveal">
+      <div class="virada__foto">
+        <img src="foto-isabel.jpeg" alt="Isabel Salvadori" loading="lazy">
+      </div>
+      <div class="virada__decor" aria-hidden="true">
+        <span class="card-tentativa">Tabela</span>
+        <span class="card-tentativa">Cartões</span>
+        <span class="card-tentativa">Modelo pronto</span>
+        <span class="card-tentativa card-tentativa--destaque">Fazer com eles</span>
+      </div>
+    </div>
+    <div class="reveal">
+      <h2 class="virada__headline">Eu demorei para perceber que estava tentando guardar a rotina dos meus filhos na minha cabeça.</h2>
+      <p class="virada__texto">Eu sou mãe de duas crianças atípicas. Durante anos testei formas de organizar a rotina aqui de casa. Tabela. Lista. Cartão. Modelo pronto. Um monte de coisa começava bem e, depois de algum tempo, simplesmente deixava de fazer sentido para a nossa realidade. E toda tentativa que não funcionava acabava virando frustração dos dois lados. Até eu começar a mudar uma coisa: em vez de simplesmente entregar uma rotina para os meus filhos, comecei a construir a rotina com eles.</p>
+      <div class="virada__cards" aria-hidden="true">
+        <span class="card-tentativa">Tabela</span>
+        <span class="card-tentativa">Cartões</span>
+        <span class="card-tentativa">Modelo pronto</span>
+        <span class="card-tentativa card-tentativa--destaque">Fazer com eles</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     BLOCO 4 — INSIGHT (o painel vai ganhando vida ao rolar a tela)
+     ========================================================================== -->
+<section class="insight secao">
+  <div class="container">
+    <div>
+      <h2 class="insight__headline reveal">Quando a criança participa, aquilo deixa de parecer só uma lista de coisas que um adulto mandou fazer.</h2>
+      <p class="insight__texto reveal">Ela escolhe uma imagem que gosta. Um personagem. As cores. Ajuda a decidir quais atividades aparecem. Vê o próprio nome. Reconhece aquela rotina como algo que também pertence a ela. E depois aquela mesma rotina fica disponível para consultar quantas vezes precisar.</p>
+      <div class="insight__sequencia reveal">
+        <p class="insight__linha">O que vem agora?</p>
+        <p class="insight__linha insight__linha--dourada">Ela pode olhar.</p>
+        <p class="insight__linha">E depois?</p>
+        <p class="insight__linha insight__linha--dourada">Está ali.</p>
+      </div>
+    </div>
+
+    <!-- Painel simulado, decorativo: constrói-se visualmente ao entrar na tela -->
+    <div class="builder reveal" data-builder aria-hidden="true">
+      <div class="builder-panel">
+        <div class="builder-panel__top"><span class="builder-panel__name">DAVI</span></div>
+        <div class="builder-panel__character">🧑‍🎨</div>
+        <div class="builder-panel__activities">
+          <span class="builder-icon">🦷</span>
+          <span class="builder-icon">🎒</span>
+          <span class="builder-icon">🍽️</span>
+          <span class="builder-icon">🛁</span>
+        </div>
+      </div>
+      <div class="builder-labels">
+        <span class="builder-label" data-step="1">atividades</span>
+        <span class="builder-label" data-step="2">cores</span>
+        <span class="builder-label" data-step="3">molduras</span>
+        <span class="builder-label" data-step="4">personagem</span>
+        <span class="builder-label" data-step="5">nome</span>
+      </div>
+    </div>
+
+    <div class="cta-intermediario cta-intermediario--claro">
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero criar assim com meu filho</a>
+      <p class="microtexto">R$29,90 · pagamento único · acesso imediato e vitalício</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     BLOCO 5 — PRODUTO
      ========================================================================== -->
 <section class="produto secao">
   <div class="container">
-    <span class="eyebrow reveal">O produto</span>
-    <h2 class="produto__titulo reveal">Guardião da Rotina</h2>
-    <p class="produto__subtitulo reveal">O sistema de rotina visual que você personaliza para o seu filho e refaz quantas vezes precisar.</p>
-
-    <div class="cards-passos">
-      <article class="card-passo reveal">
-        <span class="card-passo__numero">1</span>
-        <h3 class="card-passo__titulo">Você escolhe as atividades do dia do seu filho</h3>
-        <p class="card-passo__texto">Sono, escola, terapia, banho, refeição, tempo livre. Tudo que faz parte da rotina real dele. Tem mais de 45 ícones no banco, organizados por categoria. Se não tiver o ícone certo, você faz upload do seu.</p>
-        <picture>
-          <source srcset="print-ferramenta-2.webp" type="image/webp">
-          <img src="print-ferramenta-2.png" alt="Seletor de ícones do gerador aberto, mostrando categorias de atividades" loading="lazy" class="card-passo__img">
-        </picture>
-      </article>
-
-      <article class="card-passo reveal">
-        <span class="card-passo__numero">2</span>
-        <h3 class="card-passo__titulo">Você personaliza para ele</h3>
-        <p class="card-passo__texto">Foto de fundo, cor de destaque, nome dele no topo, personagem favorito, estilo de moldura, fonte. Não é decoração. É o que faz a criança reconhecer aquilo como dela.</p>
+    <div class="reveal produto__copy">
+      <span class="eyebrow eyebrow--dourado">Foi daí que nasceu o</span>
+      <h2 class="produto__headline">Guardião da Rotina</h2>
+      <p class="produto__texto">Uma ferramenta online para você criar a rotina visual do seu filho do zero. Não é uma tabela pronta para você adaptar. Não é um PDF que chega preenchido. Não é mais um aplicativo para assinar. Você entra e cria. Escolhe o que existe na rotina real da sua casa. Personaliza. Salva em PDF. Imprime. E, quando alguma coisa mudar, volta e altera. Quantas vezes quiser.</p>
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero acessar o Guardião</a>
+    </div>
+    <div class="reveal produto__visual">
+      <div class="produto__blob" aria-hidden="true"></div>
+      <div class="browser-frame">
+        <div class="browser-frame__bar">
+          <span class="browser-frame__dot"></span>
+          <span class="browser-frame__dot"></span>
+          <span class="browser-frame__dot"></span>
+        </div>
         <picture>
           <source srcset="print-ferramenta-1.webp" type="image/webp">
-          <img src="print-ferramenta-1.png" alt="Gerador com painel de controles de personalização aberto" loading="lazy" class="card-passo__img">
+          <img src="print-ferramenta-1.png" alt="Tela do Guardião da Rotina com o painel de personalização aberto" loading="lazy">
         </picture>
-      </article>
-
-      <article class="card-passo reveal">
-        <span class="card-passo__numero">3</span>
-        <h3 class="card-passo__titulo">Você salva ou imprime e coloca onde ele precisa ver</h3>
-        <p class="card-passo__texto">Na parede do quarto, na porta do banheiro, na geladeira. O arquivo fica em alta qualidade, dá para salvar em PDF e mandar imprimir em qualquer gráfica ou papelaria. Quando a rotina mudar, você volta, ajusta e gera de novo. Sem custo extra. Sem prazo.</p>
-        <picture>
-          <source srcset="print-ferramenta-3.webp" type="image/webp">
-          <img src="print-ferramenta-3.png" alt="Tela de impressão do painel de rotina finalizado" loading="lazy" class="card-passo__img">
-        </picture>
-      </article>
-    </div>
-
-    <div class="destaque-ilimitado reveal">
-      <p>Acesso <strong>ilimitado</strong>. Quantos painéis quiser. Para quantos filhos quiser. Para sempre.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ==========================================================================
-     SEÇÃO 5 — METODOLOGIA
-     ========================================================================== -->
-<section class="metodologia secao">
-  <div class="container">
-
-    <span class="eyebrow reveal">Metodologia</span>
-
-    <!-- Manifesto tipográfico -->
-    <div class="metodologia__manifesto reveal">
-      <p class="manifesto__linha manifesto__linha--grande">Qualquer um coloca ícone numa grade.</p>
-      <p class="manifesto__linha manifesto__linha--pequena">Isso não é rotina visual. É decoração de parede.</p>
-      <p class="manifesto__linha manifesto__linha--destaque">O Guardião da Rotina<br>é diferente.</p>
-      <p class="manifesto__linha manifesto__linha--pequena">As decisões que você nem precisa tomar já estão embutidas: proporção entre atividades, espaço visual, lógica de sequência que reduz resistência nas transições.</p>
-      <p class="manifesto__linha manifesto__linha--medio"><em>ABA aplicada à rotina doméstica.</em><br>Não como terapeuta. Como mãe.</p>
-      <p class="manifesto__linha manifesto__linha--pequena">Com dois filhos com TEA nível 1 e TDAH. Dentro de casa. Testando o que funciona e abandonando o que não funciona.</p>
-      <p class="manifesto__linha manifesto__linha--fechamento">O que está no gerador<br>é o que <span class="destaque-dourado">sobrou</span>.</p>
-    </div>
-
-    <div class="secao-visual reveal">
-      <picture>
-        <source srcset="dor-2.webp" type="image/webp">
-        <img src="dor-2.png" alt="Mãe e filho em casa" loading="lazy">
-      </picture>
-    </div>
-
-    <div class="cta-inline reveal">
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora — R$29,90</a>
-    </div>
-
-  </div>
-</section>
-
-<!-- ==========================================================================
-     SEÇÃO 6 — ISABEL
-     ========================================================================== -->
-<section class="isabel secao">
-  <div class="container">
-    <div class="isabel__foto reveal">
-      <img src="foto-isabel.jpeg" alt="Isabel Salvadori" loading="lazy" class="isabel__img">
-    </div>
-    <div class="isabel__copy isabel__copy--centralizado reveal">
-      <span class="eyebrow eyebrow--dourado">Quem criou</span>
-      <h2 class="isabel__titulo">Oi, eu sou a Isabel.</h2>
-      <div class="isabel__body">
-        <p>Mãe de dois filhos com TEA nível 1 e TDAH. <strong>Tenho TDAH também.</strong> Então eu entendo muito bem o que é querer resolver isso e não conseguir manter nada por mais de três dias.</p>
-        <p>Criei o Guardião da Rotina porque precisava de algo que não existia: uma rotina visual que eu conseguisse adaptar quando a rotina do meu filho mudava, <strong>sem ter que contratar alguém, sem esperar, sem começar do zero</strong> toda vez.</p>
-        <p>Levei anos refinando o sistema. Quando outras mães começaram a pedir, decidi transformar em produto.</p>
-        <p><strong>Você não está comprando um modelo pronto.</strong> Está usando o que eu já aprendi para você não precisar aprender do jeito difícil.</p>
+      </div>
+      <div class="stickers-field produto__stickers" aria-hidden="true">
+        <div class="sticker sticker--chips" style="--rot:-3deg">
+          <div class="sticker__inner">
+            <span class="sticker__label">Atividades</span>
+            <span class="sticker__chips">
+              <span class="sticker__chip">🎒</span>
+              <span class="sticker__chip">🍽️</span>
+              <span class="sticker__chip">🛁</span>
+            </span>
+          </div>
+        </div>
+        <div class="sticker sticker--dots" style="--rot:3deg">
+          <div class="sticker__inner" style="--delay:.5s">
+            <span class="sticker__label">Cores</span>
+            <span class="sticker__dots">
+              <span class="sticker__dot" style="background:#B97059"></span>
+              <span class="sticker__dot" style="background:#E3BD62"></span>
+              <span class="sticker__dot" style="background:#24483F"></span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 7 — PROVA SOCIAL
+     BLOCO 6 — COMO FUNCIONA (fundo marfim)
      ========================================================================== -->
-<section class="prova-social secao">
+<section class="como secao secao--compacta">
   <div class="container">
-    <h2 class="prova-social__titulo reveal">O que dizem as mães</h2>
-    <div class="prova-social__grid">
-      <blockquote class="depoimento reveal">
-        <p>"Tentei de tudo antes. Cartão, tabela, aplicativo. Com o Guardião foi a primeira vez que meu filho seguiu a rotina sem eu precisar falar nada."</p>
-        <cite>Mãe de criança com TEA, 7 anos</cite>
-      </blockquote>
-      <blockquote class="depoimento reveal">
-        <p>"O que me surpreendeu foi conseguir colocar a foto favorita dele como fundo. Ele reconheceu como dele e quis colocar na parede sozinho."</p>
-        <cite>Mãe de criança com TDAH, 9 anos</cite>
-      </blockquote>
-      <blockquote class="depoimento reveal">
-        <p>"Achei que ia ser complicado mas é muito simples. Fiz o painel em menos de 20 minutos e já imprimi na mesma hora."</p>
-        <cite>Mãe de criança com altas habilidades, 6 anos</cite>
-      </blockquote>
+    <h2 class="como__headline reveal">Você pode ter o primeiro painel pronto em poucos passos.</h2>
+
+    <div class="passos">
+      <article class="passo passo--escolha reveal">
+        <span class="passo__numero">1</span>
+        <h3 class="passo__titulo">Escolha o que realmente acontece no dia dele</h3>
+        <p class="passo__texto">O Guardião já tem um banco com mais de 45 ícones. E, se faltar alguma coisa, você pode adicionar sua própria imagem.</p>
+        <div class="passo__preview" aria-hidden="true">
+          <span>🦷</span><span>🎒</span><span>🍽️</span><span>🛁</span>
+        </div>
+        <picture>
+          <source srcset="print-ferramenta-1.webp" type="image/webp">
+          <img src="print-ferramenta-1.png" alt="Banco de ícones de atividades do Guardião da Rotina" loading="lazy" class="passo__img">
+        </picture>
+      </article>
+
+      <article class="passo passo--personalize reveal">
+        <span class="passo__numero">2</span>
+        <h3 class="passo__titulo">Chame seu filho para participar</h3>
+        <p class="passo__texto">Escolham juntos as cores, a imagem de fundo, o personagem, a fonte, o nome. Os elementos que façam ele olhar e pensar: esse é o meu.</p>
+        <div class="passo__swatches" aria-hidden="true">
+          <span style="background:#B97059"></span>
+          <span style="background:#E3BD62"></span>
+          <span style="background:#24483F"></span>
+          <span style="background:#2D3230"></span>
+        </div>
+        <picture>
+          <source srcset="print-ferramenta-2.webp" type="image/webp">
+          <img src="print-ferramenta-2.png" alt="Tela de personalização de cores e personagem do Guardião da Rotina" loading="lazy" class="passo__img">
+        </picture>
+      </article>
+
+      <article class="passo passo--salve reveal">
+        <span class="passo__numero">3</span>
+        <h3 class="passo__titulo">Salve e imprima</h3>
+        <p class="passo__texto">Terminou? Salve em PDF e imprima em casa ou mande para uma gráfica ou papelaria.</p>
+        <picture>
+          <source srcset="print-ferramenta-3.webp" type="image/webp">
+          <img src="print-ferramenta-3.png" alt="Tela de exportação em PDF do painel de rotina" loading="lazy" class="passo__img">
+        </picture>
+        <div class="passo__flow" aria-hidden="true">
+          <span class="passo__flow-step">TELA</span>
+          <span class="passo__flow-arrow">→</span>
+          <span class="passo__flow-step">PDF</span>
+          <span class="passo__flow-arrow">→</span>
+          <span class="passo__flow-step">PAPEL</span>
+        </div>
+      </article>
+
+      <article class="passo passo--mudou reveal">
+        <span class="passo__numero">4</span>
+        <h3 class="passo__titulo">Mudou a rotina?</h3>
+        <p class="passo__texto">Entre novamente. Altere. Gere outro. Sem comprar novamente.</p>
+        <div class="passo__comparativo">
+          <div class="mini-card mini-card--antes">
+            <span class="mini-card__label">Antes</span>
+            <p class="mini-card__texto">Painel antigo, já sem sentido</p>
+          </div>
+          <div class="mini-card mini-card--agora">
+            <span class="mini-card__label">Agora</span>
+            <p class="mini-card__texto">Editado e impresso de novo</p>
+          </div>
+        </div>
+      </article>
     </div>
-    <p class="prova-social__nota">Depoimentos de mães que utilizaram o sistema. Novos relatos chegam toda semana.</p>
-    <div class="cta-inline reveal">
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora — R$29,90</a>
+
+    <div class="cta-intermediario cta-intermediario--claro">
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero criar nosso primeiro painel</a>
+      <p class="microtexto">Acesso imediato · sem mensalidade</p>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 8 — INCLUSO
+     BLOCO 7 — A CRIANÇA PARTICIPA (mural / mesa de criação)
      ========================================================================== -->
-<section class="incluso secao">
+<section class="participa secao">
+  <div class="container container-media">
+    <div class="participa__board" aria-hidden="true">
+      <span class="sticker" style="--rot:-4deg"><span class="board-note">"Esse!"</span></span>
+      <span class="sticker" style="--rot:3deg"><span class="board-note">"Quero azul."</span></span>
+      <span class="sticker" style="--rot:-2deg"><span class="board-note">"Coloca esse personagem 😂"</span></span>
+      <span class="sticker" style="--rot:4deg"><span class="board-note">"Essa foto!"</span></span>
+      <span class="sticker" style="--rot:-3deg">
+        <span class="sticker__inner">
+          <span class="sticker__dots">
+            <span class="sticker__dot" style="background:#B97059"></span>
+            <span class="sticker__dot" style="background:#E3BD62"></span>
+            <span class="sticker__dot" style="background:#24483F"></span>
+            <span class="sticker__dot" style="background:#F5F1E8"></span>
+          </span>
+        </span>
+      </span>
+      <span class="sticker" style="--rot:2deg">
+        <span class="sticker__inner">
+          <span class="sticker__chips">
+            <span class="sticker__chip">🎒</span>
+            <span class="sticker__chip">🍽️</span>
+          </span>
+        </span>
+      </span>
+      <span class="sticker" style="--rot:-2deg">
+        <span class="sticker__inner">
+          <span class="sticker__chips">
+            <span class="sticker__chip">🛁</span>
+          </span>
+        </span>
+      </span>
+    </div>
+    <p class="participa__headline reveal">A parte favorita dos meus filhos não é seguir a rotina. É criar.</p>
+    <p class="participa__texto reveal">Eles escolhem. Opinam. Mudam o fundo. Querem determinado personagem. Decidem quais imagens representam melhor determinada atividade. Às vezes discordamos também. E tudo bem. Porque o objetivo nunca foi criar uma casa funcionando como um relógio. Era conseguir uma rotina mais visível, mais previsível e menos dependente de eu repetir cada pequena etapa. Hoje o Guardião faz parte da nossa casa justamente porque não parece uma ferramenta criada para controlar criança. É uma ferramenta que elas também podem usar.</p>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     BLOCO 8 — DIFERENCIAL
+     ========================================================================== -->
+<section class="diferencial secao">
   <div class="container">
-    <span class="eyebrow reveal">O que você acessa</span>
-    <h2 class="incluso__titulo reveal">O que você acessa com R$29,90</h2>
+    <h2 class="diferencial__headline reveal">Seu filho mudou? A rotina também pode mudar.</h2>
+    <p class="diferencial__texto reveal">É aí que um painel pronto costuma começar a dar problema. Mudou a escola. Entrou uma atividade nova. Mudou o horário. A criança cansou daquele personagem. Uma etapa deixou de fazer sentido. Com o Guardião, você não precisa fazer outro pedido, comprar outro arquivo ou recomeçar do zero. Você simplesmente abre, altera e imprime novamente.</p>
+    <p class="diferencial__destaque reveal">Crie. Use. Mude. Crie de novo.</p>
 
-    <ul class="lista-incluso reveal">
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>O gerador completo do Guardião da Rotina</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Banco com mais de 45 ícones por categoria (rotina, escola, terapia, autocuidado, lazer)</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Upload de ícones próprios — se não tiver o que precisa, você coloca o seu</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Personalização completa: cor, foto de fundo, personagem, fonte, moldura, nome do filho</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Arquivo em alta qualidade, pronto para imprimir ou salvar em PDF</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Funciona no celular — acessa, monta e salva direto de lá</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Acesso ilimitado — cria, refaz e ajusta quantas vezes quiser</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Funciona no navegador, sem instalar nada</span>
-      </li>
-      <li>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="10" cy="10" r="10" fill="#E3BD62"/>
-          <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span>Instruções de uso enviadas junto com o acesso</span>
-      </li>
-    </ul>
+    <div class="comparativo reveal">
+      <div class="comp-card comp-card--pronto">
+        <p class="comp-card__titulo">Painel pronto</p>
+        <div class="comp-card__stack" aria-hidden="true"><span></span></div>
+        <div class="comp-card__linha"><span class="comp-card__icone">❌</span><span>Mudou a rotina? Começa de novo</span></div>
+      </div>
+      <div class="comparativo__separador" aria-hidden="true">mudou a rotina?</div>
+      <div class="comp-card comp-card--guardiao">
+        <p class="comp-card__titulo">
+          Guardião da Rotina
+          <svg class="comp-card__refresh" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="#E3BD62" stroke-width="2" stroke-linecap="round"/>
+            <path d="M20 4v5h-5" stroke="#E3BD62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </p>
+        <div class="comp-card__stack" aria-hidden="true"><span></span><span></span></div>
+        <div class="comp-card__extras" aria-hidden="true">
+          <span class="comp-card__swatch" style="background:#B97059"></span>
+          <span class="comp-card__swatch" style="background:#E3BD62"></span>
+          <span class="comp-card__swatch" style="background:#24483F"></span>
+          <span class="comp-card__chip">🎒</span>
+        </div>
+        <div class="comp-card__linha"><span class="comp-card__icone">✅</span><span>Mudou a rotina? Edita e imprime</span></div>
+      </div>
+    </div>
 
-    <p class="incluso__fechamento reveal">Paga uma vez. Usa para sempre.</p>
-    <div class="cta-inline reveal">
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora — R$29,90</a>
+    <div class="cta-intermediario cta-intermediario--escuro">
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero o Guardião da Rotina</a>
+      <p class="microtexto">R$29,90 · pagamento único · sem mensalidade</p>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 9 — OFERTA + GARANTIA
+     BLOCO 9 — O QUE MUDA NA PRÁTICA
+     ========================================================================== -->
+<section class="pratica secao">
+  <div class="container">
+    <h2 class="pratica__headline reveal">O Guardião não promete uma criança que nunca esquece uma tarefa. Nem uma rotina perfeita.</h2>
+    <p class="pratica__texto reveal">O que ele faz é muito mais simples e útil: dá ao seu filho um lugar onde ele pode encontrar a resposta sem depender sempre de você. A referência passa a estar ali. Na parede. Na porta. Na geladeira. Onde fizer sentido na sua casa. E cada pequena consulta que ele consegue fazer sozinho é uma oportunidade de depender um pouco menos da sua memória.</p>
+
+    <div class="pratica__contraste reveal">
+      <div class="pratica__coluna">
+        <span class="pratica__label">Antes</span>
+        <div class="pratica__falas">
+          <span class="pratica__fala">"Vai escovar os dentes."</span>
+          <span class="pratica__fala">"Pega a mochila."</span>
+          <span class="pratica__fala">"Não esquece…"</span>
+        </div>
+      </div>
+      <div class="pratica__seta" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="pratica__coluna">
+        <span class="pratica__label">Depois</span>
+        <div class="pratica__painel">
+          <picture>
+            <source srcset="transformacao-2.webp" type="image/webp">
+            <img src="transformacao-2.png" alt="Criança consultando sozinha o painel de rotina visual" loading="lazy">
+          </picture>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-intermediario cta-intermediario--escuro">
+      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero tirar parte dessa rotina da minha cabeça</a>
+      <p class="microtexto">Acesso vitalício por R$29,90</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     BLOCO 10 — OFERTA
      ========================================================================== -->
 <section class="oferta secao" id="oferta">
   <div class="container">
-    <div class="oferta__coluna oferta__coluna--oferta oferta__coluna--centralizada reveal">
-      <div class="oferta__visual reveal">
-        <picture>
-          <source srcset="painel-pronto.webp" type="image/webp">
-          <img src="painel-pronto.png" alt="Painel de rotina visual gerado pelo Guardião da Rotina" loading="lazy">
-        </picture>
+    <div class="oferta__card reveal">
+      <div>
+        <span class="eyebrow eyebrow--dourado">Guardião da Rotina</span>
+        <h2 class="oferta__headline">Crie hoje a primeira rotina visual do seu filho.</h2>
+
+        <ul class="oferta__lista">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Acesso vitalício ao gerador completo do Guardião da Rotina</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Banco com mais de 45 ícones, organizados por categoria</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Upload de imagens e ícones próprios, sem limite</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Personalização completa: cores, fundo, personagem, fonte e nome do seu filho</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Arquivo em alta qualidade, pronto para salvar em PDF e imprimir</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Edições ilimitadas, sempre que a rotina mudar</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="10" cy="10" r="10" fill="#24483F"/>
+              <path d="M5.5 10.5L8.3 13.3L14.5 6.7" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Funciona no computador e no celular, direto do navegador</span>
+          </li>
+        </ul>
+
+        <p class="oferta__preco">R$29,90</p>
+        <p class="oferta__texto">Pagamento único. Sem mensalidade. Sem precisar comprar outro painel quando a rotina mudar.</p>
+
+        <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta btn-cta--grande">Quero criar a nossa rotina</a>
+        <p class="microtexto">Acesso imediato · compra segura pela Kiwify · garantia de 7 dias</p>
       </div>
-      <h2 class="oferta__produto-titulo">Guardião da Rotina</h2>
-      <p class="oferta__produto-subtitulo">Acesso vitalício ao gerador completo</p>
 
-      <p class="oferta__preco">R$29,90</p>
-      <p class="oferta__preco-nota">Valor de lançamento</p>
-
-      <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta btn-cta--grande">Criar o painel do meu filho agora</a>
-      <p class="oferta__selos">🔒 Pagamento seguro · Acesso imediato · Kiwify</p>
-    </div>
-
-    <div class="oferta__coluna reveal">
-      <div class="garantia">
-        <span class="eyebrow eyebrow--dourado">Garantia de 7 dias</span>
-        <h3 class="garantia__titulo">Sem burocracia.</h3>
-        <p class="garantia__body">Você compra, acessa e testa. Se em 7 dias você achar que não era isso que precisava, manda uma mensagem e eu devolvo o valor inteiro. Sem perguntas, sem formulário, sem processo.</p>
+      <div class="oferta__visual">
+        <div class="oferta__visual-echo" aria-hidden="true"></div>
+        <div class="oferta__visual-echo oferta__visual-echo--2" aria-hidden="true"></div>
+        <div class="oferta__visual-frame">
+          <picture>
+            <source srcset="painel-pronto.webp" type="image/webp">
+            <img src="painel-pronto.png" alt="Painel de rotina visual gerado pelo Guardião da Rotina" loading="lazy">
+          </picture>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 10 — OBJEÇÕES / FAQ
+     BLOCO 11 — GARANTIA
+     ========================================================================== -->
+<section class="garantia secao secao--compacta centralizado">
+  <div class="container-estreito reveal">
+    <div class="garantia__stamp" aria-hidden="true"><strong>7</strong><span>DIAS</span></div>
+    <span class="eyebrow eyebrow--dourado">Garantia de 7 dias</span>
+    <h2 class="garantia__headline">Você pode entrar, mexer e ver se faz sentido para vocês.</h2>
+    <p class="garantia__texto">Depois da compra, seu acesso é liberado imediatamente. Crie um painel. Teste a ferramenta. Veja como funciona na prática. Se dentro de 7 dias você perceber que o Guardião não era o que esperava, pode solicitar seu reembolso conforme a garantia da compra. Sem precisar assumir esse risco para descobrir.</p>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     BLOCO 12 — FAQ
      ========================================================================== -->
 <section class="faq secao">
   <div class="container">
     <span class="eyebrow reveal">Dúvidas frequentes</span>
-    <h2 class="faq__titulo reveal">Perguntas que você provavelmente está tendo agora</h2>
+    <h2 class="faq__headline reveal">Perguntas que você provavelmente está tendo agora</h2>
 
     <div class="accordion reveal">
       <div class="accordion-item">
         <button class="accordion-item__pergunta" aria-expanded="false">
-          <span>Serve para qualquer criança?</span>
+          <span>Preciso ter uma criança com TEA ou TDAH?</span>
           <span class="accordion-item__icone">+</span>
         </button>
         <div class="accordion-item__resposta">
-          <div class="accordion-item__resposta-inner">
-            Sim. Foi criado pensando em crianças neurodivergentes: TEA, TDAH, altas habilidades, mas a rotina visual funciona para qualquer criança. Se o seu filho é neurotípico e você quer mais organização no dia a dia dele, funciona também.
-          </div>
+          <div class="accordion-item__resposta-inner">Não. O Guardião nasceu dentro de uma casa com TEA e TDAH, mas rotina visual funciona para qualquer criança que se beneficia de ver o que vem a seguir, seja qual for o diagnóstico ou mesmo sem diagnóstico nenhum.</div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-item__pergunta" aria-expanded="false">
+          <span>Meu filho precisa saber ler?</span>
+          <span class="accordion-item__icone">+</span>
+        </button>
+        <div class="accordion-item__resposta">
+          <div class="accordion-item__resposta-inner">Não. A rotina é construída principalmente com imagens e cores. A leitura ajuda, mas não é pré-requisito. Quem ainda não lê consegue reconhecer a sequência pelas figuras.</div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-item__pergunta" aria-expanded="false">
+          <span>E se meu filho não se interessar?</span>
+          <span class="accordion-item__icone">+</span>
+        </button>
+        <div class="accordion-item__resposta">
+          <div class="accordion-item__resposta-inner">Pode acontecer, e tudo bem. Por isso a criação é feita junto com ele: escolher a imagem, o personagem, as cores. Quando ele participa da construção, o interesse costuma aparecer naturalmente. Ainda assim, você tem garantia de 7 dias para testar sem risco.</div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <button class="accordion-item__pergunta" aria-expanded="false">
+          <span>Preciso ter impressora?</span>
+          <span class="accordion-item__icone">+</span>
+        </button>
+        <div class="accordion-item__resposta">
+          <div class="accordion-item__resposta-inner">Não. Você pode imprimir em casa se tiver, ou salvar o PDF e mandar para qualquer gráfica ou papelaria perto de você.</div>
         </div>
       </div>
 
@@ -460,45 +1596,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <span class="accordion-item__icone">+</span>
         </button>
         <div class="accordion-item__resposta">
-          <div class="accordion-item__resposta-inner">
-            Dá. Você acessa pelo navegador do celular, monta o painel, salva em PDF e manda imprimir onde quiser. Se preferir usar no computador, funciona igualmente.
-          </div>
+          <div class="accordion-item__resposta-inner">Dá sim. O Guardião funciona direto no navegador do celular, sem precisar instalar aplicativo nenhum.</div>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion-item__pergunta" aria-expanded="false">
-          <span>E se eu não tiver impressora em casa?</span>
+          <span>Posso criar mais de uma rotina?</span>
           <span class="accordion-item__icone">+</span>
         </button>
         <div class="accordion-item__resposta">
-          <div class="accordion-item__resposta-inner">
-            Sem problema. Você salva o arquivo em PDF e manda imprimir em qualquer gráfica, papelaria ou loja de conveniência. O arquivo sai em alta qualidade.
-          </div>
+          <div class="accordion-item__resposta-inner">Pode. Seu acesso é vitalício e ilimitado, então você pode criar quantos painéis quiser, para quantos filhos tiver, e refazer sempre que a rotina mudar.</div>
         </div>
       </div>
 
       <div class="accordion-item">
         <button class="accordion-item__pergunta" aria-expanded="false">
-          <span>Preciso saber mexer bem no computador?</span>
+          <span>Vou pagar mensalidade?</span>
           <span class="accordion-item__icone">+</span>
         </button>
         <div class="accordion-item__resposta">
-          <div class="accordion-item__resposta-inner">
-            O Guardião da Rotina foi pensado para ser simples de usar. Você acessa pelo navegador, escolhe as atividades, personaliza as cores e o nome do seu filho, e salva. Sem instalação, sem configuração, sem complicação. As instruções de uso chegam junto com o acesso.
-          </div>
-        </div>
-      </div>
-
-      <div class="accordion-item">
-        <button class="accordion-item__pergunta" aria-expanded="false">
-          <span>E se não funcionar com meu filho?</span>
-          <span class="accordion-item__icone">+</span>
-        </button>
-        <div class="accordion-item__resposta">
-          <div class="accordion-item__resposta-inner">
-            Rotina visual leva tempo para pegar. Isso é real e não vou esconder. A ferramenta garante que o painel vai ser criado do jeito certo. Mas se você comprar, acessar e achar que a ferramenta não entregou o que eu descrevi aqui, você tem 7 dias para pedir o reembolso. Sem burocracia.
-          </div>
+          <div class="accordion-item__resposta-inner">Não. É pagamento único de R$29,90. Sem mensalidade, sem renovação, sem taxa escondida.</div>
         </div>
       </div>
     </div>
@@ -506,24 +1624,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <!-- ==========================================================================
-     SEÇÃO 11 — LEMBRETE FINAL
+     BLOCO FINAL
      ========================================================================== -->
-<section class="lembrete secao centralizado" style="padding-top: 2rem">
-  <div class="container-estreito reveal">
-    <p class="lembrete__texto">O Guardião da Rotina é o sistema de rotina visual que você personaliza para o seu filho e refaz quantas vezes precisar, na hora que precisar, sem depender de ninguém.</p>
-    <hr class="lembrete__hr">
-    <p class="lembrete__preco">R$29,90</p>
-    <p class="lembrete__preco-nota">Acesso imediato · Garantia de 7 dias</p>
-    <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Criar o painel do meu filho agora</a>
+<section class="final secao centralizado">
+  <div class="container-estreito reveal final__inner">
+    <div class="final__bg" aria-hidden="true"></div>
+    <p class="final__texto">Talvez a rotina nunca seja perfeita. Aqui em casa também não é. Mas ela não precisa continuar dependendo exclusivamente de você lembrar, pedir e repetir tudo. Você pode colocar parte dessa rotina onde seu filho consegue enxergar. E, melhor ainda: pode deixar que ele ajude a construir.</p>
+    <hr class="final__hr">
+    <div class="final__props" aria-hidden="true">
+      <span>"Esse!"</span>
+      <span class="is-dourado">●</span>
+      <span>"Essa foto!"</span>
+    </div>
+    <p class="final__preco">R$29,90</p>
+    <p class="final__preco-nota">Pagamento único · acesso vitalício</p>
+    <a href="https://pay.kiwify.com.br/mM5pKT6" class="btn-cta">Quero criar a rotina do meu filho</a>
+    <p class="final__fechamento">Depois, me conta qual foi a primeira coisa que ele escolheu. 💛</p>
   </div>
 </section>
+
+</main>
 
 <!-- ==========================================================================
      RODAPÉ
      ========================================================================== -->
 <footer class="rodape">
   <p>© 2026 Isabel Salvadori · Todos os direitos reservados</p>
-  <p>Dúvidas: <a href="mailto:suporte@isabelsalvadori.com">suporte@isabelsalvadori.com</a> · <a href="https://instagram.com/isabelsalvadori" target="_blank" rel="noopener">@isabelsalvadori</a></p>
+  <p><a href="mailto:suporte@isabelsalvadori.com">suporte@isabelsalvadori.com</a> · <a href="https://instagram.com/isabelsalvadori" target="_blank" rel="noopener">@isabelsalvadori</a></p>
 </footer>
 
 <script>
@@ -556,16 +1683,42 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   });
 
   // Scroll reveal
-  const observer = new IntersectionObserver((entries) => {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
+        revealObserver.unobserve(entry.target);
       }
     });
   }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 
-  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+
+  // Painel simulado do bloco Insight: constrói-se em etapas ao entrar na tela
+  const builder = document.querySelector('[data-builder]');
+  if (builder) {
+    const labels = builder.querySelectorAll('.builder-label');
+    const runSteps = () => {
+      const delays = prefersReducedMotion ? [0, 0, 0, 0, 0] : [200, 600, 1000, 1400, 1800];
+      delays.forEach((delay, i) => {
+        setTimeout(() => {
+          builder.classList.add('is-step-' + (i + 1));
+          if (labels[i]) labels[i].classList.add('is-active');
+        }, delay);
+      });
+    };
+    const builderObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          runSteps();
+          builderObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.35 });
+    builderObserver.observe(builder);
+  }
 </script>
 
 </body>
